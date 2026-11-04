@@ -1,0 +1,123 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {% for field in form %}
+                                <div class="form-group">
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% for error in field.errors %}
+                                        <p class="text-danger">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Apply For Leave</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Leave History</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Message</th>
+                                    <th>Image</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in leave_history %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>{{leave.date}}</td>
+                                    <td>{{leave.message}}</td>
+                                    <td>
+                                        {% if leave.image %}
+                                            <img src="{{ leave.image.url }}" alt="Leave Image" style="max-width: 100px; max-height: 100px;cursor: pointer;"onclick="showImageModal('{{ leave.image.url }}')">
+                                        {% else %}
+                                            No Image
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if leave.status == 0 %}
+                                            <span class="badge badge-warning">Pending</span>
+                                        {% elif leave.status == 1 %}
+                                            <span class="badge badge-success">Accepted</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                    {% if leave.status != 1 %}  
+                                    <td>
+                                        <a href="{% url 'edit_staff_leave' leave.id %}" class="btn btn-primary">Edit</a>
+                                        <a href="{% url 'delete_staff_leave' leave.id %}" class="btn btn-danger">Delete</a>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+<!-- Modal Structure -->
+<div id="imageModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7);">
+    <div style="margin: 10% auto; padding: 20px; background: white; width: 50%; text-align: center; position: relative;">
+        <span id="closeModal" style="position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer;">&times;</span>
+        <img id="modalImage" src="" style="max-width: 100%; max-height: 400px;">
+        <br><br>
+        <button onclick="closeModal()" class="btn btn-primary">OK</button>
+    </div>
+</div>
+
+<script>
+    function showImageModal(imageUrl) {
+        document.getElementById('modalImage').src = imageUrl;
+        document.getElementById('imageModal').style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = "none";
+    }
+
+    // Close modal when clicking on "X"
+    document.getElementById('closeModal').onclick = function() {
+        closeModal();
+    };
+
+    // Close modal when clicking outside the modal box
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('imageModal')) {
+            closeModal();
+        }
+    };
+</script>

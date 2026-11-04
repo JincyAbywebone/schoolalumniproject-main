@@ -1,0 +1,316 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Issue Transfer Certificate{% endblock breadcrumb %}
+{% block page_heading %}{{ page_title }}{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Action Bar Card -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">badge</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Issue Transfer Certificate (TC)</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Generate verified school leaving certificates for outbound students.</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'transfer_certificate_list' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-base">receipt_long</span>
+                <span>TC Register Book</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Step 1: Filter Students Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-indigo-600 text-lg">filter_alt</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Step 1: Select Class &amp; Academic Session</span>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div class="flex flex-col">
+                    <label for="course" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Class / Course <span class="text-rose-500 font-bold ml-0.5">*</span>
+                    </label>
+                    <select id="course" class="w-full bg-slate-50 text-slate-800 text-xs rounded-xl px-3.5 py-2.5 border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors">
+                        <option value="">Select Class</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}">{{ course.name }} - {{ course.division }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="session" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Academic Session <span class="text-rose-500 font-bold ml-0.5">*</span>
+                    </label>
+                    <select id="session" class="w-full bg-slate-50 text-slate-800 text-xs rounded-xl px-3.5 py-2.5 border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors">
+                        <option value="">Select Session</option>
+                        {% for session in sessions %}
+                        <option value="{{ session.id }}">{{ session }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <button type="button" id="btnLoadStudents" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all hover:scale-[1.01]">
+                        <span class="material-symbols-outlined text-base">search</span>
+                        <span>Fetch Eligible Students</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Student List Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-indigo-600 text-lg">checklist</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Step 2: Select Students for TC Issuance</span>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider border-b border-slate-200 text-[11px] font-bold">
+                        <th class="py-3 px-4 w-12 text-center">
+                            <input type="checkbox" id="select_all" class="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                        </th>
+                        <th class="py-3 px-4">Admission No</th>
+                        <th class="py-3 px-4">Student Name</th>
+                        <th class="py-3 px-4">Class</th>
+                        <th class="py-3 px-4">Session</th>
+                        <th class="py-3 px-4 text-center">Current Status</th>
+                    </tr>
+                </thead>
+                <tbody id="student_table" class="divide-y divide-slate-100 font-medium text-slate-700">
+                    <tr>
+                        <td colspan="6" class="py-10 text-center text-slate-400 italic">
+                            Select class and session above, then click <strong>"Fetch Eligible Students"</strong>.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Step 3: TC Details & Issue Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-600 text-lg">verified</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Step 3: Transfer Certificate Specifications</span>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium">* Required Fields</span>
+        </div>
+
+        <div class="p-6 sm:p-8 space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="flex flex-col">
+                    <label for="leaving_date" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Leaving Date <span class="text-rose-500 font-bold ml-0.5">*</span>
+                    </label>
+                    <input type="date" id="leaving_date" class="w-full bg-slate-50 text-slate-800 text-xs rounded-xl px-3.5 py-2.5 border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors">
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="last_attended_date" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Last Attended Date
+                    </label>
+                    <input type="date" id="last_attended_date" class="w-full bg-slate-50 text-slate-800 text-xs rounded-xl px-3.5 py-2.5 border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors">
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="conduct" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        General Conduct
+                    </label>
+                    <select id="conduct" class="w-full bg-slate-50 text-slate-800 text-xs rounded-xl px-3.5 py-2.5 border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors">
+                        <option>Excellent</option>
+                        <option>Very Good</option>
+                        <option selected>Good</option>
+                        <option>Satisfactory</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="qualified" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Qualified for Promotion
+                    </label>
+                    <select id="qualified" class="w-full bg-slate-50 text-slate-800 text-xs rounded-xl px-3.5 py-2.5 border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex flex-col">
+                    <label for="reason" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Reason for Leaving
+                    </label>
+                    <textarea id="reason" rows="3" placeholder="e.g. Higher Studies / Relocation..." class="w-full bg-slate-50 text-slate-800 text-xs rounded-xl p-3 border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"></textarea>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="remarks" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Remarks &amp; Recommendations
+                    </label>
+                    <textarea id="remarks" rows="3" placeholder="Optional remarks on fee dues, library clearances..." class="w-full bg-slate-50 text-slate-800 text-xs rounded-xl p-3 border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 sm:px-8 sm:py-5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end">
+            <button type="button" id="btnIssueTC" class="inline-flex items-center gap-2 px-8 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.01]">
+                <span class="material-symbols-outlined text-base">verified</span>
+                <span>Issue Transfer Certificate</span>
+            </button>
+        </div>
+    </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function(){
+
+    $("#select_all").change(function(){
+        $(".student_checkbox:not(:disabled)").prop("checked", $(this).prop("checked"));
+    });
+
+    $("#btnLoadStudents").click(function(){
+        var course = $("#course").val();
+        var session = $("#session").val();
+
+        if (course == "") {
+            alert("Please select Class.");
+            return;
+        }
+
+        var btn = $(this);
+        btn.prop("disabled", true).text("Fetching...");
+
+        $.ajax({
+            url: "{% url 'get_tc_students' %}",
+            type: "POST",
+            data: {
+                course: course,
+                session: session,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function(response){
+                btn.prop("disabled", false).html('<span class="material-symbols-outlined text-base">search</span><span>Fetch Eligible Students</span>');
+                var tbody = "";
+
+                if (!response || response.length == 0) {
+                    tbody += `<tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">
+                            No students found for this class and session.
+                        </td>
+                    </tr>`;
+                } else {
+                    $.each(response, function(index, item){
+                        var badge = "";
+                        if (item.tc_issued) {
+                            badge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Already Issued</span>';
+                        } else {
+                            badge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Pending</span>';
+                        }
+
+                        tbody += `
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="py-3 px-4 text-center">
+                                <input type="checkbox" class="student_checkbox rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" value="${item.id}" ${item.tc_issued ? "disabled" : ""}>
+                            </td>
+                            <td class="py-3 px-4 font-bold text-slate-800">${item.admission_number}</td>
+                            <td class="py-3 px-4 font-semibold text-slate-900">${item.name}</td>
+                            <td class="py-3 px-4 text-slate-600">${item.course}</td>
+                            <td class="py-3 px-4 text-slate-600">${item.session}</td>
+                            <td class="py-3 px-4 text-center">${badge}</td>
+                        </tr>`;
+                    });
+                }
+
+                $("#student_table").html(tbody);
+                $("#select_all").prop("checked", false);
+            },
+            error: function(){
+                btn.prop("disabled", false).html('<span class="material-symbols-outlined text-base">search</span><span>Fetch Eligible Students</span>');
+                alert("Unable to load students. Please check your network connection.");
+            }
+        });
+    });
+
+    $("#btnIssueTC").click(function(){
+        var students = [];
+        $(".student_checkbox:checked").each(function(){
+            students.push($(this).val());
+        });
+
+        if (students.length == 0) {
+            alert("Please select at least one student from the list.");
+            return;
+        }
+
+        var leaving_date = $("#leaving_date").val();
+        var last_attended_date = $("#last_attended_date").val();
+        var conduct = $("#conduct").val();
+        var qualified = $("#qualified").val();
+        var reason = $("#reason").val();
+        var remarks = $("#remarks").val();
+
+        if (leaving_date == "") {
+            alert("Leaving Date is required.");
+            $("#leaving_date").focus();
+            return;
+        }
+
+        var issueBtn = $(this);
+        issueBtn.prop("disabled", true).text("Issuing...");
+
+        $.ajax({
+            url: "{% url 'issue_tc' %}",
+            type: "POST",
+            data: {
+                student_ids: JSON.stringify(students),
+                leaving_date: leaving_date,
+                last_attended_date: last_attended_date,
+                conduct: conduct,
+                qualified_for_promotion: qualified,
+                reason: reason,
+                remarks: remarks,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function(response){
+                issueBtn.prop("disabled", false).html('<span class="material-symbols-outlined text-base">verified</span><span>Issue Transfer Certificate</span>');
+                if (response.status == "success") {
+                    alert(response.message);
+                    $("#btnLoadStudents").click();
+                    $("#select_all").prop("checked", false);
+                } else {
+                    alert(response.message || "Error issuing certificate.");
+                }
+            },
+            error: function(){
+                issueBtn.prop("disabled", false).html('<span class="material-symbols-outlined text-base">verified</span><span>Issue Transfer Certificate</span>');
+                alert("Unable to issue Transfer Certificate.");
+            }
+        });
+    });
+
+});
+</script>
+{% endblock custom_js %}

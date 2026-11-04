@@ -1,0 +1,1091 @@
+{% load static %}
+<!-- SIDEBAR CONTAINER -->
+<aside id="main-sidebar" class="fixed top-0 bottom-0 left-0 z-40 w-72 bg-[#131b2e] text-slate-300 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 flex flex-col border-r border-slate-800 shadow-2xl select-none">
+  
+  <!-- Sidebar Brand Header -->
+  <div class="h-16 px-5 flex items-center justify-between border-b border-slate-800/80 bg-[#0f172a]/60">
+    <a href="{% if request.user.user_type == '1' %}{% url 'admin_home' %}{% elif request.user.user_type == '2' %}{% url 'staff_home' %}{% elif request.user.user_type == '3' %}{% url 'student_home' %}{% elif request.user.user_type == '4' %}{% url 'acc_admin_home' %}{% elif request.user.user_type == '5' %}{% url 'dashboard_home' %}{% elif request.user.user_type == '6' %}{% url 'parent_home' %}{% elif request.user.user_type == '7' %}{% url 'alumniadmin_home' %}{% else %}{% url 'alumni_home' %}{% endif %}" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
+        <span class="material-symbols-outlined text-2xl">school</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="font-bold text-base text-white tracking-tight leading-tight">iMentor SMS</span>
+        <span class="text-[10px] uppercase font-bold tracking-widest text-indigo-400">
+          {% if request.user.user_type == '1' %}School Admin
+          {% elif request.user.user_type == '2' %}Faculty Portal
+          {% elif request.user.user_type == '3' %}Student Portal
+          {% elif request.user.user_type == '4' %}Academic Admin
+          {% elif request.user.user_type == '5' %}Super Admin
+          {% elif request.user.user_type == '6' %}Parent Portal
+          {% elif request.user.user_type == '7' %}Alumni Admin
+          {% else %}Alumni Portal{% endif %}
+        </span>
+      </div>
+    </a>
+    <!-- Close button for mobile -->
+    <button onclick="toggleSidebar()" class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+      <span class="material-symbols-outlined text-xl">close</span>
+    </button>
+  </div>
+
+  <!-- User Profile Quick Card -->
+  <div class="p-4 mx-3 my-3 rounded-xl bg-slate-800/40 border border-slate-800/80 flex items-center gap-3">
+    <div class="relative shrink-0">
+      {% if request.user.profile_pic %}
+        <img src="{{ request.user.profile_pic.url }}" alt="Profile" class="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-500/30">
+      {% else %}
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold text-sm flex items-center justify-center uppercase shadow-inner">
+          {% if request.user.first_name %}{{ request.user.first_name|slice:":1" }}{{ request.user.last_name|slice:":1" }}{% else %}U{% endif %}
+        </div>
+      {% endif %}
+      <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-[#131b2e]"></span>
+    </div>
+    <div class="flex flex-col min-w-0 flex-1">
+      <span class="text-xs font-semibold text-white truncate">
+        {% if request.user.first_name %}{{ request.user.first_name }} {{ request.user.last_name }}{% else %}{{ request.user.email }}{% endif %}
+      </span>
+      <span class="text-[11px] text-slate-400 truncate">{{ request.user.email }}</span>
+    </div>
+  </div>
+
+  <!-- Quick Filter / Search in Navigation -->
+  <div class="px-3 pb-2">
+    <div class="relative">
+      <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-lg">search</span>
+      <input type="text" id="sidebar-search" oninput="filterSidebarMenu(this.value)" placeholder="Search menu..." class="w-full bg-slate-900/60 text-slate-200 placeholder-slate-500 text-xs rounded-lg pl-9 pr-3 py-2 border border-slate-800 focus:outline-none focus:border-indigo-500 transition-colors">
+    </div>
+  </div>
+
+  <!-- Navigation Links -->
+  <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-6 scrollbar-thin scrollbar-thumb-slate-700" id="sidebar-nav-container">
+
+    {% if request.user.user_type == '1' %}
+      <!-- ROLE 1: HOD / SCHOOL ADMIN -->
+
+      <!-- Section: Main Core -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Overview</div>
+        <div class="space-y-1">
+          <a href="{% url 'admin_home' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/admin/home/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="{% url 'admin_view_profile' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/admin_view_profile' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">badge</span>
+            <span>My Profile</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section: Academics & Structure -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Institution &amp; Academics</div>
+        <div class="space-y-1">
+          
+          <!-- School Profile Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-school')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-indigo-400">school</span>
+                <span>School Profile</span>
+              </span>
+              <span id="sub-school-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-school" class="{% if '/school/' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_school' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/school/add_school' %}text-indigo-400 font-semibold{% endif %}">+ Add School Profile</a>
+              <a href="{% url 'manage_school' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/school/manage_school' %}text-indigo-400 font-semibold{% endif %}">Manage School Profile</a>
+            </div>
+          </div>
+
+          <!-- Academic Session Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-session')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-blue-400">calendar_month</span>
+                <span>Academic Session</span>
+              </span>
+              <span id="sub-session-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-session" class="{% if 'session' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_session' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/add_session/' %}text-indigo-400 font-semibold{% endif %}">+ Add Academic Year</a>
+              <a href="{% url 'manage_session' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/session/manage/' %}text-indigo-400 font-semibold{% endif %}">Manage Academic Years</a>
+            </div>
+          </div>
+
+          <!-- Courses & Classes Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-course')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-emerald-400">auto_stories</span>
+                <span>Courses &amp; Classes</span>
+              </span>
+              <span id="sub-course-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-course" class="{% if '/course/' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_course' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/course/add' %}text-indigo-400 font-semibold{% endif %}">+ Add Course / Class</a>
+              <a href="{% url 'manage_course' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/course/manage/' %}text-indigo-400 font-semibold{% endif %}">Manage Courses</a>
+            </div>
+          </div>
+
+          <!-- Subjects Master Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-subject')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-amber-400">menu_book</span>
+                <span>Subjects Master</span>
+              </span>
+              <span id="sub-subject-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-subject" class="{% if '/subject/' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_subject' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/subject/add/' %}text-indigo-400 font-semibold{% endif %}">+ Add Subject</a>
+              <a href="{% url 'manage_subject' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/subject/manage/' %}text-indigo-400 font-semibold{% endif %}">Manage Subjects</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: People Management -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">People Management</div>
+        <div class="space-y-1">
+
+          <!-- Students Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-student')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-sky-400">groups</span>
+                <span>Students</span>
+              </span>
+              <span id="sub-student-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-student" class="{% if '/student/' in request.path or '/students/' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_student' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/student/add/' %}text-indigo-400 font-semibold{% endif %}">+ Add Student</a>
+              <a href="{% url 'manage_student' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/student/manage/' %}text-indigo-400 font-semibold{% endif %}">Manage Students</a>
+              <a href="{% url 'students_list' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/students/' %}text-indigo-400 font-semibold{% endif %}">Students Roster</a>
+            </div>
+          </div>
+
+          <!-- Staff Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-staff')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-teal-400">co_present</span>
+                <span>Teachers &amp; Faculty</span>
+              </span>
+              <span id="sub-staff-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-staff" class="{% if '/staff/' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_staff' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/staff/add' %}text-indigo-400 font-semibold{% endif %}">+ Add Teacher</a>
+              <a href="{% url 'manage_staff' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/staff/manage/' %}text-indigo-400 font-semibold{% endif %}">Manage Faculty</a>
+            </div>
+          </div>
+
+          <!-- Parents Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-parent')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-violet-400">family_restroom</span>
+                <span>Parents</span>
+              </span>
+              <span id="sub-parent-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-parent" class="{% if '/parent' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_parent' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/admin/add_parent/' %}text-indigo-400 font-semibold{% endif %}">+ Add Parent</a>
+              <a href="{% url 'manage_parent' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/admin/manage_parent/' %}text-indigo-400 font-semibold{% endif %}">Manage Parents</a>
+            </div>
+          </div>
+
+          <!-- Academic Admins Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-admin')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-pink-400">manage_accounts</span>
+                <span>Academic Admins</span>
+              </span>
+              <span id="sub-acc-admin-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-admin" class="{% if '/acc_admin/' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_acc_admin' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/acc_admin/add' %}text-indigo-400 font-semibold{% endif %}">+ Add Academic Admin</a>
+              <a href="{% url 'manage_acc_admin' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/acc_admin/manage/' %}text-indigo-400 font-semibold{% endif %}">Manage Academic Admins</a>
+            </div>
+          </div>
+
+          <!-- Alumni Admins Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-alumni-admin')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-fuchsia-400">supervisor_account</span>
+                <span>Alumni Admins</span>
+              </span>
+              <span id="sub-alumni-admin-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-alumni-admin" class="{% if '/alumni/' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_alumni_admin' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/alumni/add_alumni_admin' %}text-indigo-400 font-semibold{% endif %}">+ Add Alumni Admin</a>
+              <a href="{% url 'manage_alumni_admin' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/alumni/manage_alumni_admin/' %}text-indigo-400 font-semibold{% endif %}">Manage Alumni Admins</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: Exams & Results -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Exams &amp; Results</div>
+        <div class="space-y-1">
+
+          <!-- Marks & Results Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-results')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-amber-400">grade</span>
+                <span>Bulk Marks &amp; Results</span>
+              </span>
+              <span id="sub-results-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-results" class="{% if 'result' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'admin_bulk_result_new' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/curriculam/admin_bulk_result_new' %}text-indigo-400 font-semibold{% endif %}">Bulk Marks Entry</a>
+              <a href="{% url 'manage_bulk_result_new' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/admin_result/manage_bulk_result_new' %}text-indigo-400 font-semibold{% endif %}">Manage Bulk Results</a>
+              <a href="{% url 'view_class_result' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/view_class_result/' %}text-indigo-400 font-semibold{% endif %}">View Class Results</a>
+            </div>
+          </div>
+
+          <!-- Student Promotion Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-promotion')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-teal-400">published_with_changes</span>
+                <span>Student Promotion</span>
+              </span>
+              <span id="sub-promotion-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-promotion" class="{% if 'promotion' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'student_promotion' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/admin/student_promotion/' %}text-indigo-400 font-semibold{% endif %}">Promote Students</a>
+              <a href="{% url 'promotion_history' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/admin/promotion_history/' %}text-indigo-400 font-semibold{% endif %}">Promotion History</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: Attendance & Certification -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Attendance &amp; Certification</div>
+        <div class="space-y-1">
+          <a href="{% url 'admin_view_attendance' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/attendance/view/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-emerald-400">event_available</span>
+            <span>View Attendance</span>
+          </a>
+
+          <!-- Transfer Certificate Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-tc')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-indigo-400">badge</span>
+                <span>Transfer Certificate (TC)</span>
+              </span>
+              <span id="sub-tc-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-tc" class="{% if 'transfer_certificate' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'issue_transfer_certificate' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'issue_transfer_certificate' in request.path %}text-indigo-400 font-semibold{% endif %}">+ Issue New TC</a>
+              <a href="{% url 'transfer_certificate_list' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'transfer_certificate_list' in request.path %}text-indigo-400 font-semibold{% endif %}">TC Register Book</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Alumni & Career Network -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Alumni &amp; Career Network</div>
+        <div class="space-y-1">
+
+          <!-- Alumni Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-alumni')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-purple-400">diversity_3</span>
+                <span>Alumni Directory</span>
+              </span>
+              <span id="sub-alumni-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-alumni" class="{% if 'alumini' in request.path or 'alumni' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_alumini' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">+ Add Alumni Member</a>
+              <a href="{% url 'manage_alumini' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Manage Alumni Directory</a>
+              <a href="{% url 'alumni_print' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Print Alumni Register</a>
+              <a href="{% url 'upload_alumini' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Upload Alumni Excel</a>
+            </div>
+          </div>
+
+          <!-- Alumni Events Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-events')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-amber-400">event</span>
+                <span>Alumni Events</span>
+              </span>
+              <span id="sub-events-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-events" class="{% if 'events' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_alumni_events' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">+ Add Event</a>
+              <a href="{% url 'manage_alumni_events' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Manage Events</a>
+            </div>
+          </div>
+
+          <!-- Career Guidance Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-career')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-blue-400">work</span>
+                <span>Career Guidance</span>
+              </span>
+              <span id="sub-career-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-career" class="{% if 'career' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_careerguidanceprogrammes' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">+ Add Programme</a>
+              <a href="{% url 'manage_careerguidanceprogrammes' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Manage Programmes</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: Leaves, Feedback & Notifications -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Communication &amp; Leaves</div>
+        <div class="space-y-1">
+          <a href="{% url 'view_student_leave' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/student/view/leave/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-amber-400">time_to_leave</span>
+            <span>Student Leaves</span>
+          </a>
+          <a href="{% url 'view_staff_leave' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/staff/view/leave/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-orange-400">event_busy</span>
+            <span>Staff Leaves</span>
+          </a>
+          <a href="{% url 'student_feedback_message' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/student/view/feedback/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-sky-400">rate_review</span>
+            <span>Student Feedback</span>
+          </a>
+          <a href="{% url 'staff_feedback_message' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/staff/view/feedback/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-emerald-400">reviews</span>
+            <span>Staff Feedback</span>
+          </a>
+
+          <!-- Send Notifications Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-notify')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-rose-400">notifications_active</span>
+                <span>Send Notifications</span>
+              </span>
+              <span id="sub-notify-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-notify" class="{% if 'notify' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'admin_notify_student' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Notify Students</a>
+              <a href="{% url 'admin_notify_staff' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Notify Staff</a>
+              <a href="{% url 'admin_notify_parent' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Notify Parents</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: Finance & Fees -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Finance &amp; Fees</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-fees')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-emerald-400">receipt_long</span>
+                <span>Fee Settings</span>
+              </span>
+              <span id="sub-fees-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-fees" class="{% if 'fee' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'fee_settings' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Add Fee Settings</a>
+              <a href="{% url 'manage_fee_settings' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Manage Fee Settings</a>
+              <a href="{% url 'add_fee_amount_settings' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Add Fee Amount</a>
+              <a href="{% url 'manage_fee_amount_settings' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Manage Fee Amounts</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {% elif request.user.user_type == '2' %}
+      <!-- ROLE 2: STAFF / FACULTY -->
+
+      <!-- Section: Overview -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Overview</div>
+        <div class="space-y-1">
+          <a href="{% url 'staff_home' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/staff/home/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="{% url 'staff_view_profile' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if '/staff/view/profile/' in request.path %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">account_circle</span>
+            <span>My Profile</span>
+          </a>
+          <a href="{% url 'staff_lms_dashboard' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if '/staff/lms/' in request.path %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-purple-400">local_library</span>
+            <span>LMS Portal</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section: Attendance -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Attendance</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-staff-att')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-emerald-400">fact_check</span>
+                <span>Attendance</span>
+              </span>
+              <span id="sub-staff-att-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-staff-att" class="{% if 'attendance' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'staff_take_attendance' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/staff/attendance/take/' %}text-indigo-400 font-semibold{% endif %}">Take Attendance</a>
+              <a href="{% url 'staff_update_attendance' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/staff/attendance/update/' %}text-indigo-400 font-semibold{% endif %}">View/Update Attendance</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Exams & Results -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Exams &amp; Results</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-staff-results')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-amber-400">grade</span>
+                <span>Result Management</span>
+              </span>
+              <span id="sub-staff-results-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-staff-results" class="{% if 'result' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'staff_bulk_result_new' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'staff_bulk_result' in request.path %}text-indigo-400 font-semibold{% endif %}">+ Result Bulk Upload</a>
+              <a href="{% url 'staff_manage_bulk_result_new' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'staff_manage_bulk_result' in request.path or 'edit_bulkresult' in request.path %}text-indigo-400 font-semibold{% endif %}">Manage Results</a>
+              <a href="{% url 'staff_add_result_new' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'staff_add_result_new' in request.path %}text-indigo-400 font-semibold{% endif %}">Single Marks Entry</a>
+              <a href="{% url 'staff_view_filtered_class_results' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'staff_view_filtered_class_results' in request.path %}text-indigo-400 font-semibold{% endif %}">Class-wise Results</a>
+              <a href="{% url 'staff_new_class_result' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'staff_new_class_result' in request.path %}text-indigo-400 font-semibold{% endif %}">Subject-wise Results</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Academics & Curriculum -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Academics &amp; Notes</div>
+        <div class="space-y-1">
+          <a href="{% url 'staff_curriculam' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl text-blue-400">menu_book</span>
+            <span>View Curriculum</span>
+          </a>
+          <a href="{% url 'manage_lesson_notes' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl text-teal-400">edit_note</span>
+            <span>Lesson Notes</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section: Communication & Leaves -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Communication &amp; Leaves</div>
+        <div class="space-y-1">
+          <a href="{% url 'staff_apply_leave' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl text-orange-400">event_busy</span>
+            <span>Apply Leave</span>
+          </a>
+          <a href="{% url 'staff_feedback' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl text-sky-400">rate_review</span>
+            <span>Send Feedback</span>
+          </a>
+        </div>
+      </div>
+
+    {% elif request.user.user_type == '3' %}
+      <!-- ROLE 3: STUDENT -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Student Portal</div>
+        <div class="space-y-1">
+          <a href="{% url 'student_home' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/student/home/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="{% url 'student_view_profile' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl">account_circle</span>
+            <span>My Profile</span>
+          </a>
+          <a href="{% url 'student_view_attendance' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl">event_available</span>
+            <span>My Attendance</span>
+          </a>
+          <a href="{% url 'student_view_result' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl">grade</span>
+            <span>Exam Results</span>
+          </a>
+          <a href="{% url 'student_apply_leave' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl">event_busy</span>
+            <span>Apply Leave</span>
+          </a>
+          <a href="{% url 'student_feedback' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl">rate_review</span>
+            <span>Send Feedback</span>
+          </a>
+        </div>
+      </div>
+
+    {% elif request.user.user_type == '4' %}
+      <!-- ROLE 4: ACADEMIC ADMIN (PRINCIPAL) -->
+
+      <!-- Section: Overview -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Overview</div>
+        <div class="space-y-1">
+          <a href="{% url 'acc_admin_home' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/acc_admin/home/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="{% url 'academic_admin_view_profile' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if 'academic_admin_view_profile' in request.path %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">account_circle</span>
+            <span>My Profile</span>
+          </a>
+          <a href="{% url 'teachers_list' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if 'teachers_list' in request.path %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-emerald-400">verified_user</span>
+            <span>Authorized Teachers</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section: Academics & Curriculum -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Academics &amp; Curriculum</div>
+        <div class="space-y-1">
+
+          <!-- Department Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-dept')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-indigo-400">domain</span>
+                <span>Department</span>
+              </span>
+              <span id="sub-acc-dept-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-dept" class="{% if 'department' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_department' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/curriculam/add_department' %}text-indigo-400 font-semibold{% endif %}">+ Add Department</a>
+              <a href="{% url 'manage_department' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/curriculam/manage_department' %}text-indigo-400 font-semibold{% endif %}">Manage Department</a>
+            </div>
+          </div>
+
+          <!-- Curriculum Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-curriculum')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-blue-400">menu_book</span>
+                <span>Curriculum Setting</span>
+              </span>
+              <span id="sub-acc-curriculum-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-curriculum" class="{% if 'curriculam' in request.path and not 'department' in request.path and not 'subject_master' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_curriculam' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/curriculam/add_curriculam' %}text-indigo-400 font-semibold{% endif %}">+ Add Curriculum</a>
+              <a href="{% url 'manage_curriculam' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/curriculam/manage_curriculam' %}text-indigo-400 font-semibold{% endif %}">Manage Curriculum</a>
+            </div>
+          </div>
+
+          <!-- Subject Master Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-subject')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-sky-400">auto_stories</span>
+                <span>Subject Master</span>
+              </span>
+              <span id="sub-acc-subject-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-subject" class="{% if 'subject_master' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_subject_master' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/curriculam/add_subject_master' %}text-indigo-400 font-semibold{% endif %}">+ Add Subject</a>
+              <a href="{% url 'manage_subject_master' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/curriculam/manage_subject_master' %}text-indigo-400 font-semibold{% endif %}">Manage Subjects</a>
+            </div>
+          </div>
+
+          <!-- Exam Type Settings Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-examtype')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-amber-400">rule</span>
+                <span>Exam Type Settings</span>
+              </span>
+              <span id="sub-acc-examtype-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-examtype" class="{% if 'examtype' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'add_examtype_settings' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/add_examtype_settings/' %}text-indigo-400 font-semibold{% endif %}">+ Add Exam Type</a>
+              <a href="{% url 'manage_examtype_settings' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/manage_examtype_settings/' %}text-indigo-400 font-semibold{% endif %}">Manage Exam Types</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: Results & Marks -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Results &amp; Marks</div>
+        <div class="space-y-1">
+
+          <!-- Bulk Marks Operations -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-bulkresult')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-amber-400">grade</span>
+                <span>Bulk Results</span>
+              </span>
+              <span id="sub-acc-bulkresult-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-bulkresult" class="{% if 'bulk_result' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'academic_bulk_result' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/curriculam/academic_bulk_result' %}text-indigo-400 font-semibold{% endif %}">+ Bulk Result Upload</a>
+              <a href="{% url 'manage_bulk_result' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/acc_admin/manage_bulk_result' %}text-indigo-400 font-semibold{% endif %}">Manage Bulk Results</a>
+            </div>
+          </div>
+
+          <!-- Excel Management -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-excel')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-emerald-400">table_view</span>
+                <span>Excel Operations</span>
+              </span>
+              <span id="sub-acc-excel-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-excel" class="{% if 'excel' in request.path or 'upload_student_data' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'academic_add_result' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Excel Form</a>
+              <a href="{% url 'upload_excel' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Upload Result Excel</a>
+              <a href="{% url 'student_excelform' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Student Excel Form</a>
+              <a href="{% url 'upload_student_data' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Upload Student Data</a>
+            </div>
+          </div>
+
+          <!-- View Class Results -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-viewresult')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-teal-400">assessment</span>
+                <span>View Results</span>
+              </span>
+              <span id="sub-acc-viewresult-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-viewresult" class="{% if 'result' in request.path and not 'bulk' in request.path and not 'excel' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'acc_admin_view_class_result' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'acc_admin_view_class_result' in request.path %}text-indigo-400 font-semibold{% endif %}">Class Wise Results</a>
+              <a href="{% url 'new_class_result' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'new_class_result' in request.path %}text-indigo-400 font-semibold{% endif %}">Subject Wise Results</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: Performance & Analytics -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Analytics &amp; Graphs</div>
+        <div class="space-y-1">
+
+          <!-- Staff Performance Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-staffperf')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-indigo-400">monitoring</span>
+                <span>Staff Performance</span>
+              </span>
+              <span id="sub-acc-staffperf-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-staffperf" class="{% if 'staffgraph' in request.path or 'averagemark' in request.path or 'staff_performance' in request.path or 'subject_performance' in request.path or 'classwise_examreport' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'acc_staffgraph' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Exam-wise Staff Performance</a>
+              <a href="{% url 'acc_admin_averagemark' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Class Average Mark</a>
+              <a href="{% url 'acc_admin_staffgraph2' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Student-wise Staff Performance</a>
+              <a href="{% url 'classwise_examreport' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Class Examination Report</a>
+              <a href="{% url 'staff_performance' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Class-wise Staff Performance</a>
+              <a href="{% url 'subject_performance' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Subject-wise Performance</a>
+            </div>
+          </div>
+
+          <!-- Student Performance Submenu -->
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-studentperf')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-rose-400">insights</span>
+                <span>Student Analytics</span>
+              </span>
+              <span id="sub-acc-studentperf-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-studentperf" class="{% if 'studentgraph' in request.path or 'studentexamwisegraph' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'acc_admin_studentgraph' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Subject-wise Graph</a>
+              <a href="{% url 'acc_admin_studentexamwisegraph' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Exam Wise Graph</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: Student Promotion -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Student Promotion</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-promotion')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-purple-400">published_with_changes</span>
+                <span>Promotion Portal</span>
+              </span>
+              <span id="sub-acc-promotion-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-promotion" class="{% if 'promotion' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'acc_admin_student_promotion' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'student_promotion' in request.path %}text-indigo-400 font-semibold{% endif %}">Promote Students</a>
+              <a href="{% url 'acc_admin_promotion_history' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if 'promotion_history' in request.path %}text-indigo-400 font-semibold{% endif %}">Promotion History</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: LMS (Learning Management) -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Learning Management (LMS)</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-lms')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-yellow-400">local_library</span>
+                <span>LMS Portal</span>
+              </span>
+              <span id="sub-acc-lms-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-lms" class="{% if 'lms' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'acc_admin_lms_dashboard' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">LMS Dashboard</a>
+              <a href="{% url 'acc_admin_view_lms_videos' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">View Videos</a>
+              <a href="{% url 'acc_admin_view_lms_images' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">View Images</a>
+              <a href="{% url 'acc_admin_view_lms_notes' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">View Notes</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Alumni Engagement -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Alumni Engagement</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-acc-alumni')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-pink-400">diversity_3</span>
+                <span>Alumni Portal</span>
+              </span>
+              <span id="sub-acc-alumni-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-acc-alumni" class="{% if 'alumni' in request.path or 'alumini' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'alumni_add_alumini' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">+ Add Alumni</a>
+              <a href="{% url 'alumni_manage_alumini' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Manage Alumni</a>
+              <a href="{% url 'alumni_events' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">+ Add Event</a>
+              <a href="{% url 'manage_alumnievents' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Manage Events</a>
+              <a href="{% url 'add_careerguidanceprogrammes_alumni' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">+ Add Career Guidance</a>
+              <a href="{% url 'manage_careerguidanceprogrammes_alumni' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Manage Career Guidance</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {% elif request.user.user_type == '5' %}
+      <!-- ROLE 5: SUPER ADMIN -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Super Admin</div>
+        <div class="space-y-1">
+          <a href="{% url 'dashboard_home' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/dashboard_home/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span>Dashboard Home</span>
+          </a>
+          <a href="{% url 'admin_home' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl">admin_panel_settings</span>
+            <span>School Admin Panel</span>
+          </a>
+          <a href="{% url 'manage_student' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl">groups</span>
+            <span>Manage Students</span>
+          </a>
+          <a href="{% url 'manage_staff' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-slate-300 hover:bg-slate-800/60 hover:text-white">
+            <span class="material-symbols-outlined text-xl">co_present</span>
+            <span>Manage Staff</span>
+          </a>
+        </div>
+      </div>
+
+    {% elif request.user.user_type == '6' %}
+      <!-- ROLE 6: PARENT -->
+
+      <!-- Section: Overview -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Parent Core</div>
+        <div class="space-y-1">
+          <a href="{% url 'parent_home' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.path == '/parent/home/' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section: Wards & Children -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">My Wards</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-parent-wards')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-sky-400">escalator_warning</span>
+                <span>Children &amp; Wards</span>
+              </span>
+              <span id="sub-parent-wards-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-parent-wards" class="{% if 'parent' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'parent_home' %}#my-children" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Enrolled Wards</a>
+              <a href="{% url 'student_search' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.path == '/parent/student_search/' %}text-indigo-400 font-semibold{% endif %}">+ Search / Link Ward</a>
+              <a href="{% url 'parent_home' %}#verifications" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Verification Requests</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Academics & Performance -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Academics &amp; Records</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-parent-academic')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-amber-400">school</span>
+                <span>Academic Records</span>
+              </span>
+              <span id="sub-parent-academic-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-parent-academic" class="{% if 'student' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'parent_home' %}#my-children" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Exam Results &amp; Reports</a>
+              <a href="{% url 'parent_home' %}#my-children" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Attendance Summary</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {% elif request.user.user_type == '7' %}
+      <!-- ROLE 7: ALUMNI ADMIN -->
+      
+      <!-- Section: Overview -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Core Dashboard</div>
+        <div class="space-y-1">
+          <a href="{% url 'alumniadmin_home' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'alumniadmin_home' or '/alumni_admin/alumniadmin_home/' in request.path %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section: Alumni Management -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Alumni Network</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-alumni-mgmt')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-indigo-400">groups</span>
+                <span>Alumni Members</span>
+              </span>
+              <span id="sub-alumni-mgmt-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-alumni-mgmt" class="{% if 'alumni1' in request.path or 'alumini' in request.path or 'approve' in request.path or 'excel' in request.path or 'print' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'manage_alumni1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'manage_alumni1' %}text-indigo-400 font-semibold{% endif %}">Alumni Directory</a>
+              <a href="{% url 'add_alumni1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'add_alumni1' %}text-indigo-400 font-semibold{% endif %}">+ Add Alumni</a>
+              <a href="{% url 'manage_alumni1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors">Approval Queue</a>
+              <a href="{% url 'alumniexcel_form' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'alumniexcel_form' %}text-indigo-400 font-semibold{% endif %}">Import / Export Excel</a>
+              <a href="{% url 'alumni_print' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'alumni_print' %}text-indigo-400 font-semibold{% endif %}">Print Records / ID</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Career & Placements -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Career &amp; Placement</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-alumni-career')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-emerald-400">work</span>
+                <span>Placement &amp; Jobs</span>
+              </span>
+              <span id="sub-alumni-career-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-alumni-career" class="{% if 'jobposting' in request.path or 'compan' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'manage_jobpostings1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'manage_jobpostings1' %}text-indigo-400 font-semibold{% endif %}">Job Postings</a>
+              <a href="{% url 'add_jobpostings1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'add_jobpostings1' %}text-indigo-400 font-semibold{% endif %}">+ Post New Job</a>
+              <a href="{% url 'manage_companies1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'manage_companies1' %}text-indigo-400 font-semibold{% endif %}">Associated Companies</a>
+              <a href="{% url 'add_companies1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'add_companies1' %}text-indigo-400 font-semibold{% endif %}">+ Add Company</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Events & Programmes -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Events &amp; Guidance</div>
+        <div class="space-y-1">
+          <div class="submenu-group">
+            <button onclick="toggleSubmenu('sub-alumni-events')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/60 hover:text-white transition-all">
+              <span class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl text-amber-400">event</span>
+                <span>Events &amp; Seminars</span>
+              </span>
+              <span id="sub-alumni-events-arrow" class="material-symbols-outlined text-base transition-transform">expand_more</span>
+            </button>
+            <div id="sub-alumni-events" class="{% if 'alumnievents' in request.path or 'careerguidance' in request.path %}block{% else %}hidden{% endif %} pl-9 pr-2 py-1 space-y-1">
+              <a href="{% url 'manage_alumnievents1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'manage_alumnievents1' %}text-indigo-400 font-semibold{% endif %}">Alumni Events</a>
+              <a href="{% url 'add_alumni_events1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'add_alumni_events1' %}text-indigo-400 font-semibold{% endif %}">+ Create Event</a>
+              <a href="{% url 'manage_careerguidanceprogrammes1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'manage_careerguidanceprogrammes1' %}text-indigo-400 font-semibold{% endif %}">Career Guidance</a>
+              <a href="{% url 'add_careerguidanceprogrammes1' %}" class="block px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors {% if request.resolver_match.url_name == 'add_careerguidanceprogrammes1' %}text-indigo-400 font-semibold{% endif %}">+ Add Guidance Prog.</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Feedback & Account -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Feedback &amp; Account</div>
+        <div class="space-y-1">
+          <a href="{% url 'viewfeedbacks' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'viewfeedbacks' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-sky-400">rate_review</span>
+            <span>Alumni Feedback</span>
+          </a>
+          <a href="{% url 'alumniadminviewprofile' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'alumniadminviewprofile' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-purple-400">account_circle</span>
+            <span>Admin Profile</span>
+          </a>
+        </div>
+      </div>
+
+    {% else %}
+      <!-- ROLE 8 / DEFAULT: ALUMNI MEMBER -->
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Alumni Portal</div>
+        <div class="space-y-1">
+          <a href="{% url 'alumnis_home' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'alumnis_home' or request.resolver_match.url_name == 'alumni_home' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="{% url 'alumni_student_view_profile' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'alumni_student_view_profile' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-indigo-400">account_circle</span>
+            <span>My Profile</span>
+          </a>
+          <a href="{% url 'alumni_list' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'alumni_list' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-cyan-400">groups</span>
+            <span>Alumni Directory</span>
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Opportunities</div>
+        <div class="space-y-1">
+          <a href="{% url 'placement_cell' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'placement_cell' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-emerald-400">work</span>
+            <span>Placement Cell</span>
+          </a>
+          <a href="{% url 'view_careerguidance' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'view_careerguidance' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-amber-400">psychology</span>
+            <span>Career Guidance</span>
+          </a>
+          <a href="{% url 'view_events' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'view_events' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-rose-400">event</span>
+            <span>Alumni Events</span>
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div class="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">Support &amp; Security</div>
+        <div class="space-y-1">
+          <a href="{% url 'alumni_feedback' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'alumni_feedback' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-sky-400">rate_review</span>
+            <span>Send Feedback</span>
+          </a>
+          <a href="{% url 'alumni_password' %}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {% if request.resolver_match.url_name == 'alumni_password' %}bg-indigo-600 text-white shadow-lg shadow-indigo-600/30{% else %}text-slate-300 hover:bg-slate-800/60 hover:text-white{% endif %}">
+            <span class="material-symbols-outlined text-xl text-slate-400">lock_reset</span>
+            <span>Change Password</span>
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Bottom System Navigation -->
+    <div class="pt-4 border-t border-slate-800/80">
+      <a href="{% url 'user_logout' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors">
+        <span class="material-symbols-outlined text-xl">logout</span>
+        <span>Sign Out</span>
+      </a>
+    </div>
+
+  </nav>
+
+</aside>
+
+<!-- Mobile Overlay Backdrop -->
+<div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 hidden lg:hidden transition-opacity"></div>
+
+<!-- Sidebar Helper JS -->
+<script>
+  function toggleSidebar() {
+    var sidebar = document.getElementById('main-sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+    if (sidebar) {
+      if (sidebar.classList.contains('-translate-x-full')) {
+        sidebar.classList.remove('-translate-x-full');
+        if (overlay) overlay.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        if (overlay) overlay.classList.add('hidden');
+      }
+    }
+  }
+
+  function toggleSubmenu(id) {
+    var menu = document.getElementById(id);
+    var arrow = document.getElementById(id + '-arrow');
+    if (menu) {
+      menu.classList.toggle('hidden');
+      if (arrow) {
+        arrow.classList.toggle('rotate-180');
+      }
+    }
+  }
+
+  function filterSidebarMenu(query) {
+    var q = query.toLowerCase().trim();
+    var groups = document.querySelectorAll('#sidebar-nav-container .submenu-group');
+    var links = document.querySelectorAll('#sidebar-nav-container .sidebar-item');
+
+    links.forEach(function(link) {
+      var text = link.textContent.toLowerCase();
+      if (!q || text.includes(q)) {
+        link.style.display = '';
+      } else {
+        link.style.display = 'none';
+      }
+    });
+
+    groups.forEach(function(group) {
+      var text = group.textContent.toLowerCase();
+      var submenu = group.querySelector('div[id^="sub-"]');
+      if (!q || text.includes(q)) {
+        group.style.display = '';
+        if (q && submenu) {
+          submenu.classList.remove('hidden');
+        }
+      } else {
+        group.style.display = 'none';
+      }
+    });
+  }
+</script>

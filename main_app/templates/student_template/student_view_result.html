@@ -1,0 +1,58 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<style>
+    .target{
+        color: red;
+        text-align: right;
+   }
+     
+</style>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+       
+                <!-- /.card -->
+<div class="card card-primary">
+    <div class="card-header"><h3 class="card-title">{{page_title}}</h3>
+       <div class="target" >
+        <a href="{% url 'detailed_evaluation' %} ">Detailed Evaluation</a>/
+        <a href="{% url 'term_wise_list' %} ">Term Wise List</a></div>
+       
+    </div>
+   <div class="table p-2">
+       
+       <table class="table table-bordered">
+           <tr>
+               <th>ID</th>
+               <th>Subject</th>
+               <th>Test</th>
+               <th>Exam</th>
+               <th>Total</th>
+               <th>Term</th>
+               
+          </tr>
+       {% for result in results %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{ result.subject.subject.name }}</td>
+            <td>{{ result.test }}</td>
+            <td>{{ result.exam }}</td>
+            <td>{{ result.test|add:result.exam }}</td>
+          <td>{{result.term}}</td>
+          
+        </tr>
+           {% endfor %}
+        </table> 
+    </div>
+    </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

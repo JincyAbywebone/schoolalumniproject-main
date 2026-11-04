@@ -1,0 +1,184 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <form method="POST">
+                    {% csrf_token %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Course</label>
+                            <select name="course" class="form-control" id='course1'>
+                                <option value="">select Course</option>
+                                {% for course in courses  %}
+                                <option value="{{course.id}}">{{course.name }}-{{course.division}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" id='subject_data' >
+                            <label>Subject</label>
+                            <select name="subject_data" class="form-control" id='subject_data'>
+                                <option value="select subject"> Subject</option>
+                                {% for subject in subjects  %}
+                                <option value="{{subject.id}}">{{subject.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Term</label>
+                            <select name="term_wise" class="form-control" id='term_wise'>
+                                <option value="">Select Term</option>
+                                <option value="Term-1">Term-1</option>
+                                <option value="Term-2">Term-2</option>   
+                            </select>
+                        </div>
+                        <div class="card-footer">
+                            <button type="Submit" id='manage_curriculum' class="btn btn-primary btn-block"  with messages=messages >
+                              Submit  </button>
+                            </div>
+                        </form>
+                        <div class="curriculam_data" id='curriculam_data'>
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Class</th>
+                                    <th>Subject</th>
+                                    <th>Module/Unit</th>
+                                    <th>Topics</th>
+                                    <th>Term </th>
+                                    <th>Status</th>
+                                    <th>Edit</th>
+                                    <th>Delete</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for curriculam in curriculams %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{curriculam.course.name}}-{{curriculam.course.division}}</td>
+                                    <td>{{curriculam.subject.subject.name}}</td>
+                                    <td>{{curriculam.title}}</td>
+                                    <td>{{curriculam.lesson}}</td>
+                                    <td>{{curriculam.term}}</td>
+                                    {% comment %} <td>{{ curriculam.status }}</td> {% endcomment %}
+                                    <td> {% if curriculam.status == False %}
+                                        <input type="checkbox" name ="status" value=" false "  unchecked hidden>
+                                         {% else %}  
+                                          <input type="checkbox" name ="status" value=" true "  checked
+                                        >{% endif %}</td>       
+                                     <td><a href="{% url 'edit_curriculam' curriculam.id %}" class="btn btn-primary">Edit</a>
+                                      </td> 
+                                      <td><a href="{% url 'delete_curriculam' curriculam.id %}" class="btn btn-danger" onclick="return confirm('Are you sure about this ?')">Delete</a></td>
+                                     <td> <a href="{% url 'send_notification' curriculam.id %}" class="btn btn-primary">Send Notification</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+{% block custom_js %}
+<script>
+
+    $("#course1").change(function() {
+        var course = $("#course1").val()
+         $("#subject_data").html(null)
+         if (course.length  == 0){
+            alert("Please select course");
+            return false;
+         }
+         $.ajax({
+            url: "{% url 'get_course' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                 }
+        }).done(function (response) {
+          
+                var json_data = JSON.parse(response)
+                if (json_data.length < 1) {
+                    alert("No data to display")
+                } else {
+                   
+                    var div_data = "<hr/><div class='form-group'> <label> Subject</label> <select class='student_list form-control' name='subject_data1' id='subject_data1'> "
+
+                    for (key in json_data) {
+                        div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['name'] + " </option>"
+                    }
+                  
+                    $("#subject_data").html(div_data)
+                }
+            }).fail(function (response) {
+                alert("Error in fetching students")
+        
+
+        })
+    });
+    $("#manage_curriculum").click(function (event) {
+        event.preventDefault(); // Prevent default form submission
+    
+        var course = $("#course1").val();
+        var subject_data = $("#subject_data1").val();
+        var term_wise = $("#term_wise").val();
+    
+        if (!course || !subject_data || !term_wise) {
+            alert("Please select course, subject, and term.");
+            return false;
+        }
+    
+        $.ajax({
+            url: "{% url 'manage_curriculam_data' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                subject_data: subject_data,
+                term_wise: term_wise,
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val() // Include CSRF token
+            },
+            success: function (response) {
+                if (response.length < 1) {
+                    alert("No data to display");
+                    $("#curriculam_data").html("");
+                } else {
+                    
+                    var div_data = "<hr/><div class='form-group'> <label> Manage Curriculam</label><table id='example2' class='table table-bordered table-hover'> <thead><tr><th>SN</th><th>Class</th> <th>Subject</th> <th>Lesson</th> <th>Term</th><th>Status</th> <th>Edit</th> <th>Delete</th>  <th>Action</th>  </tr>  </thead> <tbody>";
+    
+                    response.forEach(function (curriculam) {
+                        div_data += "<tr><td>" + curriculam.id + "</td><td>" + curriculam.course +"-" +curriculam.division+ "</td><td>" + curriculam.subject + "</td><td>" + curriculam.lesson + "</td><td>" + curriculam.term + "</td>" +"<td>"+(curriculam.status ? "<input type='checkbox' name='status' value='true' checked>"      : "<input type='checkbox' name='status' value='false' hidden>")    +"</td>" + "<td><a href='/curriculam/edit_curriculam/" + curriculam.id + "' class='btn btn-primary'>Edit </a></td><td> <a href='/curriculam/delete_curriculam/" + curriculam.id + "' class='btn btn-danger'> Delete</td><td><a href='/curriculam/send_notification/" + curriculam.id +"' class='btn btn-primary'>Send Notification</a></td>";
+                      
+                    });
+    
+                    div_data += "</tbody></table></div>";
+    
+    
+                    $("#curriculam_data").html(div_data);
+                }
+            },
+            error: function () {
+                alert("Error in fetching students");
+            }
+        });
+    });
+</script>
+{% endblock custom_js %}
+
+
+

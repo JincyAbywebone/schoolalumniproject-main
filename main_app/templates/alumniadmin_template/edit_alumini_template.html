@@ -1,0 +1,113 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    {% include "main_app/form_template.html" with messages=messages  form=form button_text="Update Alumini"%}
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+    {% block custom_js %}
+    <script>
+        {% comment %} $(document).change(function(){ {% endcomment %}
+        $("#id_course").change(function() {
+            var course = $("#id_course").val() 
+            $("#subject_data").html(null)
+             if (course.length == 0){
+                alert("Please select course");
+                return false;
+             }
+             $.ajax({
+                url: "{% url 'get_alumini_course' %}",
+                type: 'POST',
+                data: {
+                    course: course,
+                  }
+            }).done(function (response) {
+        
+               var json_data = JSON.parse(response)
+              
+               if (json_data.length < 1) {
+               
+                        alert("No data to display")
+                    } else {
+                        var div_data = "</hr><div class='form-group'> <label>Subject</label> <select class ='form-control' name ='id_department' id='id_department'>"
+                         for ( key in json_data) {
+                           
+                            div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['department'] + "</option>"
+                        }
+                        
+                        // Close the select and div elements
+                        div_data += "</select></div>"
+                        
+                        // Insert the generated HTML into the element with id 'subject_data'
+                        $("#id_department").html(div_data);
+                        
+                        // Optional: Alert the generated HTML for debugging
+                       // alert(div_data);
+        
+                    }
+                    
+                }).fail(function (response) {
+                    alert("Error in fetching students")
+            
+        
+          })  
+        })
+        
+    document.addEventListener("DOMContentLoaded", function() {
+        let checkbox = document.getElementById("id_same_as_permanent");
+        let permLocality = document.getElementById("id_street_address");
+        let permCity = document.getElementById("id_city");
+        let permDistrict = document.getElementById("id_district_name");
+        let permState = document.getElementById("id_state");
+        let currLocality = document.getElementById("id_current_street_address");
+        let currCity = document.getElementById("id_current_city");
+        let currDistrict = document.getElementById("id_current_district_name");
+        let currState = document.getElementById("id_current_state");
+       
+
+
+        function toggleCurrentAddress() {
+           
+            if (checkbox.checked) {
+                currLocality.value = permLocality.value;
+                currDistrict.value = permDistrict.value;
+                currState.value = permState.value;
+                currCity.value = permCity.value;
+                currLocality.readOnly = true;
+                currDistrict.readOnly = true;
+                currState.readOnly = true;
+                currCity.readOnly = true;
+            } else {
+                currLocality.value = "";
+                currDistrict.value = "";
+                currState.value = "";
+                currCity.value = "";
+                currLocality.readOnly = false;
+                currDistrict.readOnly = false;
+                currState.readOnly = false;
+                currCity.readOnly = false;
+            }
+        }
+
+        checkbox.addEventListener("change", toggleCurrentAddress);
+    });
+</script>
+{% endblock custom_js %}
+

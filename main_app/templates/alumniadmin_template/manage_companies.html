@@ -1,0 +1,59 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sl.No.</th>
+                                    <th>Company Name</th>
+                                    <th>Website</th>
+                                    <th>Contact</th>
+                                    <th>Image</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for companies in company %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{companies.company_name }}</td>
+                                    <td>{{companies.website}}</td>
+                                    <td>{{companies.contact}}</td>
+                                    
+                                    <td>
+                                        {% if companies.image == ""  %}
+                                        No Image
+                                        {% else %}
+                                        <img class="img img-fluid mb-2" height="100" width="100"
+                                            src="{{companies.image}}" alt="">
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'editcompany' companies.id %}" class="btn btn-primary" style="width: 73px;">Edit</a>
+                                        <a href="{% url 'deletecompany' companies.id %}" onclick="return confirm('Are you sure you want to delete this ?')" class="btn btn-danger">Delete</a>   
+
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

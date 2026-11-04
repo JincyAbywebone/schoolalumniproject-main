@@ -1,0 +1,65 @@
+C:\Users\abyke\AppData\Local\Programs\Python\Python312\python.exe: can't open file 'C:\\Users\\abyke\\OneDrive\\Documents\\imentor_git\\imentor\\backup_sql.py': [Errno 2] No such file or directory
+C:\Users\abyke\AppData\Local\Programs\Python\Python312\python.exe: can't open file 'C:\\Users\\abyke\\OneDrive\\Documents\\imentor_git\\imentor\\backup_sql.py': [Errno 2] No such file or directory
+'mysqldump' is not recognized as an internal or external command,
+operable program or batch file.
+Traceback (most recent call last):
+  File "C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup_sql.py", line 26, in <module>
+    subprocess.run(command, shell=True, check=True)
+  File "C:\Users\abyke\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command 'mysqldump -h localhost -u root db_imentor > "C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql"' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup_sql.py", line 29, in <module>
+    print(f"\u274c Backup failed: {e}")
+  File "C:\Users\abyke\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 0: character maps to <undefined>
+'mysqldump' is not recognized as an internal or external command,
+operable program or batch file.
+Traceback (most recent call last):
+  File "C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup_sql.py", line 26, in <module>
+    subprocess.run(command, shell=True, check=True)
+  File "C:\Users\abyke\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command 'mysqldump -h localhost -u root db_imentor > "C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql"' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup_sql.py", line 29, in <module>
+    print(f"\u274c Backup failed: {e}")
+  File "C:\Users\abyke\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 0: character maps to <undefined>
+'mysqldump' is not recognized as an internal or external command,
+operable program or batch file.
+[ERROR] Backup failed: Command 'mysqldump -h localhost -u root db_imentor > "C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql"' returned non-zero exit status 1.
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-23.sql
+
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-28.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-30.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-06-30.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-07-01.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-07-03.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-07-08.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-07-09.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-07-10.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-07-11.sql
+[OK] Backup created: C:\Users\abyke\OneDrive\Documents\imentor_git\imentor\backup\db_backup_2025-07-14.sql
+
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+

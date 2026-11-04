@@ -1,0 +1,136 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                     <form type="">
+                    <div class="card-body">
+                        <div>
+                            <label>Attendance Date</label>
+                            <input type="date" class='form-control' name="staff_attendance_date" id='staff_attendance_date' >
+                            <script>
+                                // Get today's date
+                                const today = new Date();
+                                const formattedDate = today.toISOString().split('T')[0]; // Format to YYYY-MM-DD
+                              
+                                // Set the date field to the system's date
+                                document.getElementById('staff_attendance_date').value = formattedDate;
+                              </script>
+                        </div><br>
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Full Name</th>
+                                    <th>Course</th>
+                                    <th>Image</th>
+                                    <th>Forenoon</th>
+                                    <th>Afternoon</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for staff in allStaff %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{staff.first_name}}, {{staff.last_name}}</td>
+                                    <td id="staffid">{{staff.id}}</td>
+                                   <td>{{staff.staff.course}}</td>
+                                    <td>
+                                        {% if staff.profile_pic %}
+                                        <img class="img img-fluid mb-2" height="100" width="100"
+                                            src="{{staff.profile_pic.url}}" alt="">
+                                        {% else %}
+                                        No Image
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" id="fn" name="fn" checked value="{{staff.id}}">
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" id="an" name="an" checked>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                
+                            </tbody>
+                        </table>
+                       
+                        <div class="card-footer">
+                            <button type="button" id='staff_attendance' class="btn btn-primary btn-block">Submit</button>
+                        </div>
+
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+
+<script>
+
+document.getElementById('staff_attendance').addEventListener('click', function () {
+    const tableRows = document.querySelectorAll('#example2 tbody tr');
+    const attendanceData = [];
+    const attendanceDate = document.getElementById('staff_attendance_date').value;
+
+    // Loop through table rows and extract data
+    tableRows.forEach(row => {
+        const staffId = row.querySelector('input[name="staffid"]').value;
+        const forenoon = row.querySelector('input[name="fn"]').checked ? 1 : 0;
+        const afternoon = row.querySelector('input[name="an"]').checked ? 1 : 0;
+        attendanceData.push(`${staffId},${forenoon},${afternoon}`);
+    });
+
+    // Send data via Ajax
+    fetch('/take_teacher_attendance/', { // Replace '/save_attendance/' with your actual URL
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken') // Ensure CSRF token is included
+        },
+        body: `attendance_date=${attendanceDate}&attendance_data=${JSON.stringify(attendanceData)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert(data.message);
+        } else if (data.error) {
+            alert(`Error: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+
+// Function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(`${name}=`)) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock custom_js %}

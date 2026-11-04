@@ -1,0 +1,88 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+
+<body style="font-family: Arial, sans-serif;">
+
+    <!-- Centered Bold Blue Heading -->
+    {% if alumni_members %}
+        <h2 style="text-align: center; color: blue; font-weight: bold; margin-top: 20px;">
+            ALUMNI MEMBERS OF {{ alumni_members.0.course.name }} ({{ alumni_members.0.period_of_study }})
+        </h2>
+    {% endif %}
+
+    <!-- Centered Table -->
+    <div style="display: flex; justify-content: center; margin-top: 30px;">
+        <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 80%;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Employment Status</th>
+                    <th>Sector</th>
+                    <!-- <th>Message</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for alumni in alumni_members %}
+                    <tr>
+                        <td>{{ alumni.admin.first_name }} {{ alumni.admin.last_name }}</td>
+                        <td>{{ alumni.mobile }}</td>
+                        <td>{{ alumni.employment_status }}</td>
+                        <td>{{ alumni.employment_sectors }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No alumni found from your batch and department.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+
+{% endblock %} 
+<section class="content">
+    <div class="container-fluid">
+        
+        {% if alumni_members %}
+            <h2 style="text-align: center; color: #007bff; font-weight: bold; margin-top: 20px; text-transform: uppercase;">
+                Alumni Members of {{ alumni_members.0.course_studied }} ({{ alumni_members.0.period_of_study }})
+            </h2>
+        {% endif %}
+
+        <div class="card mt-4">
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Mobile</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alumni in alumni_members %}
+                            <tr>
+                                <td>{{ alumni.studentname }}</td>
+                                <td>{{ alumni.mobile }}</td>
+                                <td>
+                                    <span class="badge {% if alumni.current_status == 'E' %}badge-success{% elif alumni.current_status == 'S' %}badge-warning{% else %}badge-info{% endif %}">
+                                        {{ alumni.get_current_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4">No alumni found from your batch and department.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% comment %} {% endblock %} {% endcomment %}

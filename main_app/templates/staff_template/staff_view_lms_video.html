@@ -1,0 +1,339 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block custom_css %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "surface-container": "#eceef0",
+                    "on-secondary-container": "#54647a",
+                    "tertiary-fixed-dim": "#89ceff",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f2f4f6",
+                    "on-tertiary-container": "#e4f2ff",
+                    "surface": "#f7f9fb",
+                    "inverse-surface": "#2d3133",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "on-primary-container": "#eeefff",
+                    "on-error-container": "#93000a",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-background": "#191c1e",
+                    "background": "#f7f9fb",
+                    "tertiary-container": "#0074a6",
+                    "secondary-container": "#d0e1fb",
+                    "on-tertiary-fixed-variant": "#004c6e",
+                    "on-primary-fixed": "#00174b",
+                    "tertiary": "#005a82",
+                    "outline": "#737686",
+                    "inverse-primary": "#b4c5ff",
+                    "surface-tint": "#0053db",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "secondary": "#505f76",
+                    "primary": "#004ac6",
+                    "on-tertiary-fixed": "#001e2f",
+                    "surface-bright": "#f7f9fb",
+                    "outline-variant": "#c3c6d7",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "secondary-fixed": "#d3e4fe",
+                    "on-surface-variant": "#434655",
+                    "on-surface": "#191c1e",
+                    "surface-variant": "#e0e3e5",
+                    "on-secondary": "#ffffff",
+                    "surface-dim": "#d8dadc",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed": "#dbe1ff",
+                    "primary-container": "#2563eb",
+                    "on-secondary-fixed": "#0b1c30",
+                    "tertiary-fixed": "#c9e6ff"
+                },
+                fontFamily: {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+                },
+                borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-panel {
+        backdrop-filter: blur(20px);
+        background: rgba(255, 255, 255, 0.8);
+    }
+    .main-header, .content-header, .main-footer {
+        display: none !important;
+    }
+    /* Theater mode video fit */
+    #custom-video {
+        max-height: 85vh;
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<div class="font-body text-surface-900 min-h-screen bg-surface">
+    <main class="pt-2 pb-24 px-4 lg:px-8 w-full max-w-[2000px] mx-auto flex flex-col gap-6">
+
+        <!-- Main Player Wrapper for Ambient Glow -->
+        <div class="relative w-full aspect-video md:aspect-[21/9] lg:aspect-video xl:aspect-[21/9] z-0">
+            <!-- Ambient Canvas -->
+            <canvas id="ambient-glow" aria-hidden="true" class="absolute top-0 left-0 w-full h-full pointer-events-none blur-[70px] saturate-[150%] opacity-80 scale-[1.05] z-0 rounded-2xl"></canvas>
+
+            <!-- Main Player Container (Theater Mode -> Full Width) -->
+            <div class="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl bg-black group border border-slate-800 flex items-center justify-center z-10" id="video-container">
+                <video id="custom-video" crossorigin="anonymous" class="w-full h-full object-contain">
+                    <source src="{{ video.video.url }}" type="video/mp4" />
+                </video>
+
+            <!-- Player Overlays -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <!-- Glassmorphic Controls -->
+            <div class="absolute bottom-6 left-6 right-6 rounded-full px-6 py-3 flex items-center gap-4 border border-white/20 shadow-2xl transform translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-xl bg-black/50 overflow-hidden">
+                <button id="play-pause-btn" class="text-white hover:text-white hover:scale-110 transition-transform flex items-center justify-center p-2">
+                    <span id="play-icon" class="material-symbols-outlined text-3xl" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                </button>
+
+                <!-- Progress Bar & Time -->
+                <div class="flex-1 flex flex-col gap-1 mx-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="flex items-center gap-1 text-[11px] font-medium font-label">
+                            <span id="current-time" class="text-white font-bold">00:00</span>
+                            <span class="text-white/40">/</span>
+                            <span id="duration-time" class="text-white/80">00:00</span>
+                        </div>
+                    </div>
+                    <div class="relative w-full h-[6px] bg-white/20 rounded-full cursor-pointer group/bar overflow-visible" id="progress-container">
+                        <div id="progress-bar" class="absolute inset-y-0 left-0 w-0 bg-blue-500 rounded-full transition-all" style="width: 0%;"></div>
+                        <div id="scrubber-handle" class="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg scale-0 group-hover/bar:scale-100 transition-transform border border-blue-500" style="left: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Right Side Controls -->
+                <div class="flex items-center gap-3 border-l border-white/20 pl-4">
+                    <button id="mute-btn" class="text-white hover:text-white transition-colors flex items-center justify-center">
+                        <span id="mute-icon" class="material-symbols-outlined" data-icon="volume_up">volume_up</span>
+                    </button>
+                    <button id="speed-btn" class="text-[10px] font-bold px-2 py-1 rounded-md bg-white/20 text-white hover:bg-white/30 transition-colors">1.0x</button>
+                    <button id="fullscreen-btn" class="text-white hover:text-white transition-colors flex items-center justify-center">
+                        <span class="material-symbols-outlined" data-icon="fullscreen">fullscreen</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        </div> <!-- End of Ambient Glow Wrapper -->
+
+        <div class="w-full flex flex-col gap-10 mt-2 max-w-[1600px] mx-auto">
+            <!-- Content Header -->
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="px-4 py-1.5 bg-blue-50 text-blue-700 text-[11px] uppercase tracking-widest font-extrabold rounded-full border border-blue-100">{{ video.subject.subject.name }}</span>
+                    <span class="px-4 py-1.5 bg-slate-100 text-slate-700 text-[11px] uppercase tracking-widest font-extrabold rounded-full border border-slate-200">{{ video.course.name }}</span>
+                </div>
+                <h1 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 leading-[1.1] tracking-tight mt-1">{{ video.title }}</h1>
+                
+                <div class="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl p-6 mt-2 shadow-sm">
+                    <div class="flex items-center gap-4 border-b border-slate-100 pb-4 mb-4">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-lg uppercase">
+                            {{ video.uploaded_by.first_name|make_list|first|default:"U" }}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-base font-bold text-slate-900">{{ video.uploaded_by.first_name }} {{ video.uploaded_by.last_name }}</span>
+                            <span class="text-xs text-slate-500 font-medium">Uploaded {{ video.created_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                    {% if video.description %}
+                    <p class="text-slate-700 text-base sm:text-lg leading-relaxed font-['Inter'] whitespace-pre-wrap">{{ video.description }}</p>
+                    {% else %}
+                    <p class="text-slate-400 italic text-sm">No description provided for this video.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Related Videos (Moved down below title/description) -->
+            <div class="flex flex-col gap-6 pt-4 border-t border-slate-200">
+                <div class="flex items-center gap-3">
+                    <h2 class="font-headline font-extrabold text-2xl text-slate-900 tracking-tight">Related Videos</h2>
+                    <span class="text-[10px] text-blue-600 font-bold uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full">Up Next</span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    {% for next_video in next_videos %}
+                    <a href="{% url 'staff_view_lms_video' next_video.id %}" class="block group">
+                        <div class="flex flex-col gap-3">
+                            <div class="relative aspect-video rounded-xl overflow-hidden border border-slate-200 shadow-sm transition-all duration-300 group-hover:shadow-md bg-slate-100">
+                                <video class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" preload="metadata" muted playsinline>
+                                    <source src="{{ next_video.video.url }}#t=1" type="video/mp4">
+                                </video>
+                                <div class="absolute inset-0 bg-black/10 group-hover:bg-black/30 flex items-center justify-center transition-colors duration-300 backdrop-blur-[1px] opacity-0 group-hover:opacity-100">
+                                    <span class="material-symbols-outlined text-4xl text-white drop-shadow-md" data-icon="play_circle" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1 px-1">
+                                <h4 class="text-base font-bold text-slate-900 leading-snug group-hover:text-primary transition-colors line-clamp-2" title="{{ next_video.title }}">{{ next_video.title }}</h4>
+                                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{{ next_video.subject.subject.name }} • {{ next_video.created_at|timesince }} ago</p>
+                            </div>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="col-span-full flex flex-col items-center justify-center py-12 text-center bg-slate-50 rounded-2xl border border-slate-200 border-dashed gap-3">
+                        <span class="material-symbols-outlined text-4xl text-slate-300">movie_off</span>
+                        <p class="text-sm font-medium text-slate-500">No related courses/videos available.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Automatically collapse the sidebar for Theater Layout
+        document.body.classList.add('sidebar-collapse');
+
+        const video = document.getElementById("custom-video");
+        const playPauseBtn = document.getElementById("play-pause-btn");
+        const playIcon = document.getElementById("play-icon");
+        const muteBtn = document.getElementById("mute-btn");
+        const muteIcon = document.getElementById("mute-icon");
+        const speedBtn = document.getElementById("speed-btn");
+        const fullscreenBtn = document.getElementById("fullscreen-btn");
+        const progressContainer = document.getElementById("progress-container");
+        const progressBar = document.getElementById("progress-bar");
+        const scrubberHandle = document.getElementById("scrubber-handle");
+        const currentTimeEl = document.getElementById("current-time");
+        const durationTimeEl = document.getElementById("duration-time");
+        const videoContainer = document.getElementById("video-container");
+
+        // Ambient Glow Logic
+        const canvas = document.getElementById('ambient-glow');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        
+        canvas.width = 64;
+        canvas.height = 64;
+        let animationId;
+
+        // Function to draw the video on canvas while cropping the edges
+        function renderGlowFrame() {
+            const w = video.videoWidth;
+            const h = video.videoHeight;
+            if (w && h) {
+                // Crop slightly to ignore letterboxing/black space
+                ctx.drawImage(video, w * 0.02, h * 0.02, w * 0.96, h * 0.96, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function drawGlow() {
+            if (video.paused || video.ended) {
+                cancelAnimationFrame(animationId);
+                return;
+            }
+            renderGlowFrame();
+            animationId = requestAnimationFrame(drawGlow);
+        }
+
+        video.addEventListener('play', () => {
+            drawGlow();
+        });
+
+        video.addEventListener('seeked', () => {
+            renderGlowFrame();
+        });
+
+        video.addEventListener('loadeddata', () => {
+            renderGlowFrame();
+        });
+
+        // Format time in mm:ss
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "00:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+        }
+
+        // Play / Pause
+        function togglePlay() {
+            if (video.paused) {
+                video.play();
+                playIcon.textContent = "pause";
+            } else {
+                video.pause();
+                playIcon.textContent = "play_arrow";
+            }
+        }
+
+        playPauseBtn.addEventListener("click", togglePlay);
+        video.addEventListener("click", togglePlay);
+
+        // Update Time & Progress Bar
+        video.addEventListener("timeupdate", () => {
+            currentTimeEl.textContent = formatTime(video.currentTime);
+            const progress = (video.currentTime / video.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+            scrubberHandle.style.left = `${progress}%`;
+        });
+
+        video.addEventListener("loadedmetadata", () => {
+            durationTimeEl.textContent = formatTime(video.duration);
+        });
+
+        // Click on Progress Bar to Seek
+        progressContainer.addEventListener("click", (e) => {
+            const rect = progressContainer.getBoundingClientRect();
+            const clickPos = (e.clientX - rect.left) / rect.width;
+            video.currentTime = clickPos * video.duration;
+        });
+
+        // Mute / Unmute
+        muteBtn.addEventListener("click", () => {
+            video.muted = !video.muted;
+            muteIcon.textContent = video.muted ? "volume_off" : "volume_up";
+        });
+
+        // Playback Speed
+        let speeds = [1.0, 1.25, 1.5, 2.0, 0.5];
+        let currentSpeedIdx = 0;
+        speedBtn.addEventListener("click", () => {
+            currentSpeedIdx = (currentSpeedIdx + 1) % speeds.length;
+            video.playbackRate = speeds[currentSpeedIdx];
+            speedBtn.textContent = speeds[currentSpeedIdx].toFixed(2) + "x";
+        });
+
+        // Fullscreen
+        fullscreenBtn.addEventListener("click", () => {
+            if (!document.fullscreenElement) {
+                videoContainer.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+    });
+</script>
+{% endblock custom_js %}

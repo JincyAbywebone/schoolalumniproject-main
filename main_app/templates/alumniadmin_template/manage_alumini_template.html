@@ -1,0 +1,204 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content" >
+    <div class="container-fluid" >
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                        <br>
+                       
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <form method="POST" class="mb-3">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <input type="text" name="query" id="query" class="form-control" placeholder="Search" >
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" id="submit" name="submit" class="btn btn-primary">Search</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div id="alumni_list" class="alumni_list" >
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sl.No.</th>
+                                    <th>Alumni Name</th>
+                                    <th>Alumni Image</th>
+                                    <th>Email</th> 
+                                    <th>Mobile</th>
+                                    <th>Active</th>
+                                    
+                                    <th>Action</th>
+                                    <th>Date of Joining</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in alumini %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>{{data.studentname}}</td>
+                        
+                                  <td>
+                                        {% if data.profile_pic %}
+                                        <img class="img img-fluid mb-2" height="100" width="100"
+                                            src="{{data.profile_pic.url}}" alt="Profile Image">
+                                        {% else %}
+                                        <span class="text-muted">No Image</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{data.email}}</td>
+                                    <td>{{data.mobile}}</td>
+                                    {% comment %} <td style="color: blue;"><b>{{data.alumnimembers.employment_status}}</b></td>  {% endcomment %}
+                                    <td>
+                                        {% if  data.alumnimembers.is_active == False %}
+                                        <button class="btn btn-success approve-btn" data-id="{{ data.alumnimembers.id }}">Approve</button>
+                                        {% else %}
+                                        <span class="text-success"><b>Approved</b></span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'alumni_admin_edit_alumini' data.id %}" class="btn btn-primary" style="width: 68px;">Edit</a>
+                                        <a href="{% url 'deletealumini' data.id %}" class="btn btn-danger" onclick="return confirm('Are you sure about this ?')">Delete</a>  
+                                    </td>
+                                    <td>{{data.created_at}}</td>
+                                </tr>
+                                {% endfor %}
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+{% block custom_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(".approve-btn").click(function () {
+            var alumniId = $(this).data("id");
+            var button = $(this);
+            $.ajax({
+                url: "{% url 'approve_alumnis' %}",
+                type: "POST",
+                data: {
+                    "id": alumniId,
+                    "csrfmiddlewaretoken": "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    if (response.status === "success") {
+                        button.replaceWith('<span class="text-success"><b>Approved</b></span>');
+                    }
+                },
+                error: function () {
+                    alert("Error updating status.");
+                }
+            });
+        });
+    });
+   
+    $(document).ready(function () {
+        $("#submit").click(function () {
+            var query = $("#query").val().trim();
+            console.log("Search Query:", query); // Debugging
+    
+            if (query === "") {
+                alert("Please enter a search query");
+                return;
+            }
+    
+            $.ajax({
+                url: "{% url 'alumni_students_list' %}",
+                type: "POST",
+                data: {
+                    "query": query,
+                    "csrfmiddlewaretoken": "{{ csrf_token }}"  // Ensure CSRF token is included
+                },
+                success: function (response) {
+                    console.log("Response Data:", response);  // Debugging
+    
+                    if (response.length === 0) {
+                        alert("No results found");
+                        $("#alumni_list").html("");
+                        return;
+                    }
+    
+                    var div_data = `<hr/>
+                        <div class='form-group'>
+                            <label>Manage Alumni</label>
+                            <table id='example2' class='table table-bordered table-hover'>
+                                <thead>
+                                    <tr>
+                                        <th>Sl.No.</th>
+                                        <th>Alumni Name</th>
+                                        <th>Alumni Image</th>
+                                        <th>Mobile</th>
+                                        <th>Course</th>
+                                        <th>Department</th>
+                                        <th>District</th>
+                                        <th>Status</th>
+                                        <th>Active</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+    
+                    // Iterate through the combined response list
+                    response.forEach(function (item, index) {
+                        var slNo = index + 1;
+                        var editUrl = `edit_manage_alumini/${item.admin_id}`;
+                        var deleteUrl = `delete_alumini/${item.admin_id}`;
+    
+                        div_data += `<tr>
+                            <td>${slNo}</td>
+                            <td>${item.name}</td>
+                            <td><img class="img img-fluid mb-2" height="100" width="100"
+                                            src="${item.profile_pic ? (item.profile_pic.startsWith('/') ? item.profile_pic : '/media/' + item.profile_pic) : ''}" alt=""> </td>
+                            <td>${item.mobile !== "N/A" ? item.mobile : "-"}</td>
+                            <td>${item.course__name !== "N/A" ? item.course__name : "-"}</td>
+                             <td>${item.department__department !== "N/A" ? item.department__department : "-"}</td>
+                            <td>${item.district !== "N/A" ? item.district : "-"}</td>
+                            <td style="color: blue;">${item.status}</td>
+                            <td>
+                                ${item.is_active === true ? "<span class='text-success'><b>Approve</b></span>" : 
+                                    (item.type === "Alumni" ? `<button class='btn btn-success approve-btn' data-id='${item.id}'>Approve</button>` : "-")
+                                }
+                            </td>
+                            <td>
+                                ${item.type === "Alumni" ? 
+                                    `<a href="${editUrl}" class='btn btn-primary'>Editttt</a> 
+                                    <a href='${deleteUrl}' class='btn btn-danger' onclick='return confirm("Are you sure?")'>Delete</a>` 
+                                    : "<button class='btn btn-info'>View</button>"
+                                }
+                            </td>
+                        </tr>`;
+                    });
+    
+                    div_data += "</tbody></table></div>";
+                    $("#alumni_list").html(div_data);
+                },
+                error: function () {
+                    alert("Error in fetching data");
+                }
+            });
+        });
+    });
+</script>
+{% endblock custom_js %}
+
+
+
+

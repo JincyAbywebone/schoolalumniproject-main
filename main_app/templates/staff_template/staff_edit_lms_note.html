@@ -1,0 +1,259 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block custom_css %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "surface-container": "#eceef0",
+                    "on-secondary-container": "#54647a",
+                    "tertiary-fixed-dim": "#89ceff",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f2f4f6",
+                    "on-tertiary-container": "#e4f2ff",
+                    "surface": "#f7f9fb",
+                    "inverse-surface": "#2d3133",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "on-primary-container": "#eeefff",
+                    "on-error-container": "#93000a",
+                    "on-tertiary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-background": "#191c1e",
+                    "background": "#f7f9fb",
+                    "tertiary-container": "#0074a6",
+                    "secondary-container": "#d0e1fb",
+                    "on-tertiary-fixed-variant": "#004c6e",
+                    "on-primary-fixed": "#00174b",
+                    "tertiary": "#005a82",
+                    "outline": "#737686",
+                    "inverse-primary": "#b4c5ff",
+                    "surface-tint": "#0053db",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "secondary": "#505f76",
+                    "primary": "#004ac6",
+                    "on-tertiary-fixed": "#001e2f",
+                    "surface-bright": "#f7f9fb",
+                    "outline-variant": "#c3c6d7",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "secondary-fixed": "#d3e4fe",
+                    "on-surface-variant": "#434655",
+                    "on-surface": "#191c1e",
+                    "surface-variant": "#e0e3e5",
+                    "on-secondary": "#ffffff",
+                    "surface-dim": "#d8dadc",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed": "#dbe1ff",
+                    "primary-container": "#2563eb",
+                    "on-secondary-fixed": "#0b1c30",
+                    "tertiary-fixed": "#c9e6ff"
+                },
+                fontFamily: {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+                },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "1.5rem", "full": "9999px" },
+            },
+        },
+    }
+</script>
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    /* Hide AdminLTE default components shown in the screenshots to keep the Tailwind UI clean */
+    .main-header, .content-header, .main-footer {
+        display: none !important;
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<div class="bg-surface font-body text-on-surface min-h-screen flex flex-col">
+    <main class="flex-grow relative overflow-hidden flex items-center justify-center py-12 px-6">
+        <div class="absolute top-[-10%] left-[-5%] w-[40%] h-[60%] rounded-full bg-primary/5 blur-[120px] -z-10"></div>
+        <div
+            class="absolute bottom-[-10%] right-[-5%] w-[40%] h-[60%] rounded-full bg-secondary-container/20 blur-[120px] -z-10">
+        </div>
+
+        <div class="w-full max-w-4xl">
+            {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                <div
+                    class="p-4 mb-2 rounded-xl {% if message.tags == 'error' %}bg-error-container text-on-error-container{% else %}bg-secondary-container text-on-secondary-container{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+            <div class="p-4 mb-4 rounded-xl bg-error-container text-on-error-container">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data" id="note-edit-form">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+
+                    <!-- Left: Subject Category -->
+                    <div class="lg:col-span-4 space-y-6 pt-8">
+                        <div class="space-y-4">
+                            <h2 class="text-2xl font-extrabold font-headline text-on-surface tracking-tighter">
+                                Select Subject <br /><span class="text-primary">Category</span>
+                            </h2>
+                            <div
+                                class="flex flex-col gap-3 max-h-[500px] overflow-y-auto pr-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
+                                {% for subj in subject_list %}
+                                <label class="cursor-pointer group">
+                                    <input class="hidden peer" name="subject_id" type="radio" value="{{subj.id}}" {% if subj.id == note.subject.id %}checked{% endif %} required />
+                                    <div
+                                        class="px-5 py-3 rounded-xl bg-surface-container-lowest border border-outline-variant/20 text-on-surface-variant peer-checked:bg-primary peer-checked:text-on-primary peer-checked:border-primary peer-checked:shadow-lg transition-all duration-300 font-medium text-sm flex items-start gap-3 hover:bg-surface-container-low cursor-pointer">
+                                        <span class="material-symbols-outlined text-[18px] mt-0.5"
+                                            style="font-variation-settings: 'FILL' 1;">description</span>
+                                        <div class="flex flex-col">
+                                            <span class="font-bold leading-tight">{{subj.name}}</span>
+                                            <span
+                                                class="text-[10px] opacity-80 font-semibold tracking-wide uppercase mt-1">{{subj.course}}
+                                                - {{subj.division}}</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Central Form Card -->
+                    <div class="lg:col-span-8">
+                        <div
+                            class="glass-effect rounded-xl shadow-[0_8px_32px_0_rgba(25,28,30,0.06)] p-8 md:p-12 border border-white/20">
+                            <div class="space-y-8">
+                                <!-- Title Input -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-semibold text-on-surface-variant font-label ml-1"
+                                        for="title">Note Title</label>
+                                    <input
+                                        class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline/50 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-300"
+                                        id="title" name="title" placeholder="Enter note title" type="text" required
+                                        value="{{ note.title }}" />
+                                    {% if form.title.errors %}
+                                    <p class="text-sm text-error mt-1">{{ form.title.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Content Textarea -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-semibold text-on-surface-variant font-label ml-1"
+                                        for="content">Note Content</label>
+                                    <textarea
+                                        class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline/50 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-300 resize-none"
+                                        id="content" name="content" placeholder="Enter note content"
+                                        rows="5">{{ note.content }}</textarea>
+                                    {% if form.content.errors %}
+                                    <p class="text-sm text-error mt-1">{{ form.content.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Current Attachment Preview -->
+                                {% if note.file %}
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-semibold text-on-surface-variant font-label ml-1">Current Attachment</label>
+                                    <div class="flex items-center gap-3 p-4 bg-surface-container-low/50 rounded-xl border border-outline-variant/10">
+                                        <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">attach_file</span>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-on-surface truncate">{{ note.file.name|cut:"lms/notes/" }}</p>
+                                        </div>
+                                        <a href="{{ note.file.url }}" target="_blank" class="text-xs font-bold text-primary hover:underline">Download</a>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- File Upload Zone (optional for edit) -->
+                                <div class="space-y-2">
+                                    <label
+                                        class="block text-sm font-semibold text-on-surface-variant font-label ml-1">Replace Attachment <span class="text-outline text-xs font-normal">(optional)</span></label>
+                                    <div class="relative group">
+                                        <input class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                            id="file-upload" name="file" type="file"
+                                            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" />
+                                        <div
+                                            class="border-2 border-dashed border-outline-variant/30 rounded-xl p-10 flex flex-col items-center justify-center gap-4 bg-surface-container-low/30 group-hover:bg-surface-container-low transition-colors duration-300">
+                                            <div
+                                                class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                <span class="material-symbols-outlined text-3xl"
+                                                    style="font-variation-settings: 'FILL' 1;">cloud_upload</span>
+                                            </div>
+                                            <div class="text-center">
+                                                <p class="font-bold text-on-surface" id="file-name-display">Drop a new file to replace</p>
+                                                <p class="text-sm text-on-surface-variant">PDF, DOC, PPT, XLS or TXT — leave empty to keep current</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if form.file.errors %}
+                                    <p class="text-sm text-error mt-1">{{ form.file.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- CTA Section — morphs into progress bar -->
+                                <div class="pt-4" id="uploadCTA">
+                                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4" id="uploadBtnRow">
+                                        <button
+                                            class="w-full sm:w-auto px-10 py-4 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-bold text-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all duration-300"
+                                            type="submit" id="btnUpload">
+                                            Update Note
+                                        </button>
+                                        <a href="{% url 'staff_manage_lms_notes' %}"
+                                            class="w-full sm:w-auto px-10 py-4 rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white font-bold text-lg shadow-lg shadow-red-500/20 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all duration-300 text-center"
+                                            id="btnCancel">
+                                            Cancel
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+{% include "staff_template/lms_upload_progress.html" %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.body.classList.add('sidebar-collapse');
+    });
+
+    document.getElementById('file-upload').addEventListener('change', function (e) {
+        var fileNameDisplay = document.getElementById('file-name-display');
+        if (this.files && this.files.length > 0) {
+            fileNameDisplay.textContent = this.files[0].name;
+        } else {
+            fileNameDisplay.textContent = "Drop a new file to replace";
+        }
+    });
+</script>
+{% endblock custom_js %}

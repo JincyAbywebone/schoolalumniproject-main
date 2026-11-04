@@ -1,0 +1,335 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Staff &bull; Exams &bull; Single Student Marks Entry{% endblock breadcrumb %}
+{% block page_heading %}Single Student Examination Marks Entry{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Top Action & Navigation Tabs -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1 border-b border-slate-200">
+    <div class="flex items-center gap-2">
+      <a href="{% url 'staff_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
+        <span class="material-symbols-outlined text-base text-slate-400">upload_file</span>
+        <span>Bulk Upload</span>
+      </a>
+      <a href="{% url 'staff_add_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-sm shadow-indigo-600/20">
+        <span class="material-symbols-outlined text-base">person_add</span>
+        <span>Single Student Entry</span>
+      </a>
+    </div>
+
+    <div>
+      <a href="{% url 'staff_manage_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all">
+        <span class="material-symbols-outlined text-base">manage_search</span>
+        <span>Manage Saved Results</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Messages Alert -->
+  {% if message %}
+    <div class="p-4 rounded-xl text-sm font-medium flex items-center gap-3 bg-emerald-50 text-emerald-700 border border-emerald-200">
+      <span class="material-symbols-outlined text-xl">check_circle</span>
+      <span>{{ message }}</span>
+    </div>
+  {% endif %}
+  {% if error %}
+    <div class="p-4 rounded-xl text-sm font-medium flex items-center gap-3 bg-rose-50 text-rose-700 border border-rose-200">
+      <span class="material-symbols-outlined text-xl">error</span>
+      <span>{{ error }}</span>
+    </div>
+  {% endif %}
+
+  <!-- Single Entry Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">assignment_add</span>
+        </div>
+        <div>
+          <h3 class="card-title">Enter Student Examination Marks</h3>
+          <p class="text-xs text-slate-500 font-normal mt-0.5">Select class criteria to load individual students and record scores</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <!-- Course -->
+          <div class="form-group mb-0">
+            <label for="course1" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-indigo-500">school</span>
+              Class / Course &amp; Division <span class="text-rose-500">*</span>
+            </label>
+            <select name="course1" class="form-control" id="course1" required>
+              <option value="">-- Choose Class --</option>
+              {% for data in data_list %}
+                <option value="{{ data.id }}">{{ data.name }} - {{ data.division }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Subject -->
+          <div class="form-group mb-0" id="subject_data">
+            <label for="subject_data1" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-sky-500">menu_book</span>
+              Subject <span class="text-rose-500">*</span>
+            </label>
+            <select name="subject_data1" class="form-control" id="subject_data1" required>
+              <option value="">-- Select Course First --</option>
+            </select>
+          </div>
+
+          <!-- Session -->
+          <div class="form-group mb-0">
+            <label for="session" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-emerald-500">history_edu</span>
+              Session Year <span class="text-rose-500">*</span>
+            </label>
+            <select name="session" id="session" class="form-control" required>
+              <option value="">-- Select Session --</option>
+              {% for session in sessions %}
+                <option value="{{ session.id }}">{{ session }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Exam -->
+          <div class="form-group mb-0">
+            <label for="exam_name" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-amber-500">assignment</span>
+              Examination <span class="text-rose-500">*</span>
+            </label>
+            <select class="form-control" id="exam_name" name="exam_name" required>
+              <option value="">-- Select Exam --</option>
+              {% for examname in examnames %}
+                <option value="{{ examname.id }}">{{ examname.exam_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Term -->
+          <div class="form-group mb-0">
+            <label for="term_select" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-purple-500">calendar_month</span>
+              Academic Term <span class="text-rose-500">*</span>
+            </label>
+            <select class="form-control" id="term_select" name="term" required>
+              <option value="">-- Select Term --</option>
+              <option value="Term-1">Term-1</option>
+              <option value="Term-2">Term-2</option>
+            </select>
+          </div>
+
+          <!-- Fetch Button -->
+          <div class="form-group mb-0 flex items-end">
+            <button type="button" id="fetch_students" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 transition-all">
+              <span class="material-symbols-outlined text-lg">person_search</span>
+              <span>Fetch Students</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Student Dynamic Evaluation Box -->
+        <div id="student_data" class="pt-4"></div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function () {
+    let maxMarks = 20;
+
+    // Load subjects on course select
+    $("#course1").change(function () {
+        var course = $(this).val();
+        if (!course) {
+            $("#subject_data").html("<label class='flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600'>Subject</label><select class='form-control' name='subject_data1' id='subject_data1'><option value=''>-- Select Course First --</option></select>");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'staff_get_course' %}",
+            type: "POST",
+            data: {
+                course: course,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (response) {
+                var json_data = typeof response === "string" ? JSON.parse(response) : response;
+                if (!json_data || json_data.length < 1) {
+                    $("#subject_data").html("<label class='flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600'>Subject</label><select class='form-control' name='subject_data1' id='subject_data1'><option value=''>No subjects available</option></select>");
+                } else {
+                    var html = "<label class='flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600'><span class='material-symbols-outlined text-sm text-sky-500'>menu_book</span>Subject <span class='text-rose-500'>*</span></label><select class='form-control' name='subject_data1' id='subject_data1'>";
+                    json_data.forEach(function (subject) {
+                        html += `<option value="${subject.id}">${subject.name}</option>`;
+                    });
+                    html += "</select>";
+                    $("#subject_data").html(html);
+                }
+            },
+            error: function () {
+                alert("Error fetching subjects.");
+            }
+        });
+    });
+
+    // Fetch students
+    $("#fetch_students").click(function () {
+        var course = $("#course1").val();
+        var subject = $("#subject_data select").val();
+        var session = $("#session").val();
+        var exam_type = $("#exam_name").val();
+
+        if (!course || !subject || !session || !exam_type) {
+            alert("Please select Course, Subject, Session, and Exam.");
+            return;
+        }
+
+        $("#fetch_students").prop("disabled", true).text("Fetching...");
+
+        $.ajax({
+            url: "{% url 'get_students_result' %}",
+            type: "POST",
+            data: {
+                subject: subject,
+                session: session,
+                course: course,
+                exam_type: exam_type,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (response) {
+                $("#fetch_students").prop("disabled", false).html("<span class='material-symbols-outlined text-lg'>person_search</span><span>Fetch Students</span>");
+                var json_data = typeof response === "string" ? JSON.parse(response) : response;
+                if (!json_data || json_data.length < 1) {
+                    $("#student_data").html(`
+                        <div class="p-6 rounded-xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-sm">
+                            No students found for this selection.
+                        </div>`);
+                    return;
+                }
+
+                maxMarks = json_data[0].max_marks || 20;
+
+                var html = `
+                <div class="p-5 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-4 mt-2">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Select Student &amp; Record Score</span>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                            Max Marks: ${maxMarks}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="form-group mb-0 md:col-span-1">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-600">Student List</label>
+                            <select class="form-control" id="student_list" name="student_list">`;
+
+                json_data.forEach(function (student) {
+                    html += `<option value="${student.id}">${student.name}</option>`;
+                });
+
+                html += `
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-600">Score (Max: ${maxMarks})</label>
+                            <input type="number" step="any" class="form-control font-bold" id="score" name="score" placeholder="Enter Score" min="0" max="${maxMarks}" required />
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <label class="text-xs font-bold uppercase tracking-wider text-slate-600">Remarks (Auto)</label>
+                            <input type="text" class="form-control font-medium bg-white" id="remarks" name="remarks" placeholder="Calculated automatically" readonly />
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex justify-end">
+                        <button class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md shadow-emerald-600/20 transition-all" type="button" id="save_result">
+                            <span class="material-symbols-outlined text-base">save</span>
+                            <span>Save Result</span>
+                        </button>
+                    </div>
+                </div>`;
+
+                $("#student_data").html(html);
+            },
+            error: function (xhr) {
+                $("#fetch_students").prop("disabled", false).html("<span class='material-symbols-outlined text-lg'>person_search</span><span>Fetch Students</span>");
+                alert("Error fetching students: " + (xhr.responseText || xhr.statusText));
+            }
+        });
+    });
+
+    // Auto remarks calculation
+    $(document).on("input", "#score", function () {
+        let score = parseFloat($(this).val());
+        if (isNaN(score)) {
+            $("#remarks").val("");
+            return;
+        }
+
+        if (score === 0) {
+            $("#remarks").val("Absent");
+            return;
+        }
+
+        if (score > maxMarks) {
+            $("#remarks").val("Invalid Score");
+            return;
+        }
+
+        let percent = (score / maxMarks) * 100;
+        let remark = "";
+
+        if (percent >= 95) remark = "Outstanding";
+        else if (percent >= 90) remark = "Excellent";
+        else if (percent >= 85) remark = "Very Good";
+        else if (percent >= 80) remark = "Good";
+        else if (percent >= 70) remark = "Satisfactory";
+        else if (percent >= 60) remark = "Average";
+        else if (percent >= 50) remark = "Below Average";
+        else remark = "Need Improvement";
+
+        $("#remarks").val(remark);
+    });
+
+    // Save result click
+    $(document).on("click", "#save_result", function () {
+        let studentId = $("#student_list").val();
+        if (!studentId) {
+            alert("Please select a student.");
+            return;
+        }
+        let subjectId = $("#subject_data select").val();
+        let examNameId = $("#exam_name").val();
+        let term = $("#term_select").val();
+        if (!subjectId || !examNameId || !term) {
+            alert("Please select Subject, Exam Name, and Term.");
+            return;
+        }
+        let remarks = $("#remarks").val();
+        let score = parseFloat($("#score").val());
+        if (isNaN(score) || score < 0 || score > maxMarks) {
+            alert("Please enter a valid score between 0 and " + maxMarks);
+            return;
+        }
+
+        $("form").submit();
+    });
+});
+</script>
+{% endblock custom_js %}

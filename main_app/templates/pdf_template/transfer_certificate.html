@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<style>
+
+@page{
+    size:A4 portrait;
+    margin:20mm;
+}
+
+body{
+
+    font-family:"Times New Roman",serif;
+    font-size:14px;
+    color:#000;
+
+}
+
+table{
+
+    width:100%;
+    border-collapse:collapse;
+
+}
+
+td{
+
+    padding:6px;
+
+}
+
+.heading{
+
+    text-align:center;
+
+}
+
+.school{
+
+    font-size:26px;
+    font-weight:bold;
+
+}
+
+.address{
+
+    font-size:13px;
+
+}
+
+.title{
+
+    font-size:20px;
+    font-weight:bold;
+    text-decoration:underline;
+    margin-top:10px;
+
+}
+
+.label{
+
+    width:45%;
+    font-weight:bold;
+
+}
+
+.value{
+
+    border-bottom:1px dotted #000;
+
+}
+
+.logo{
+
+    width:90px;
+    height:90px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<table>
+
+<tr>
+
+<td width="18%">
+
+{% if school.logo %}
+<img src="{{ school.logo.url }}" class="logo">
+{% endif %}
+
+</td>
+
+<td class="heading">
+
+<div class="school">
+
+{{ school.name }}
+
+</div>
+
+<div class="address">
+
+{{ school.address }}
+
+<br>
+
+Phone : {{ school.phone }}
+
+<br>
+
+Affiliation No : {{ school.affiliation_number }}
+
+</div>
+
+<div class="title">
+
+TRANSFER CERTIFICATE
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+<br>
+
+<table border="0">
+
+<tr>
+
+<td class="label">
+
+TC No.
+
+</td>
+
+<td class="value">
+
+{{ tc.tc_number }}
+
+</td>
+
+<td class="label">
+
+Admission No.
+
+</td>
+
+<td class="value">
+
+{{ student.admission_number }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+1. Name of Student
+
+</td>
+
+<td colspan="3" class="value">
+
+{{ student.admin.first_name }}
+{{ student.admin.last_name }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+2. Father's / Guardian's Name
+
+</td>
+
+<td colspan="3" class="value">
+
+{{ student.parent_name }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+3. Mother's Name
+
+</td>
+
+<td colspan="3" class="value">
+
+{{ student.mother_name }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+4. Date of Birth
+
+</td>
+
+<td class="value">
+
+{{ student.admin.date_of_birth|date:"d-m-Y"}}
+
+</td>
+<td class="label">
+Sex
+</td>
+
+<td class="value">
+{% if student.admin.gender == "M" %}
+Male
+{% elif student.admin.gender == "F" %}
+Female
+{% else %}
+Others
+{% endif %}
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+5. Nationality
+</td>
+
+<td class="value">
+Indian
+</td>
+
+<td class="label">
+Religion
+</td>
+
+<td class="value">
+{{ student.religion }}
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+6. Caste / Community
+</td>
+
+<td colspan="3" class="value">
+{{ student.caste }}
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+7. Date of Admission
+</td>
+
+<td class="value">
+{{ student.admission_date|date:"d-m-Y" }}
+</td>
+
+<td class="label">
+Admission Number
+</td>
+
+<td class="value">
+{{ student.admission_number }}
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+8. Class Last Studied
+</td>
+
+<td colspan="3" class="value">
+{{ student.course.name }} {{ student.course.division }}
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+9. Whether Qualified for Promotion
+</td>
+
+<td colspan="3" class="value">
+
+{% if tc.qualified_for_promotion %}
+
+YES
+
+{% else %}
+
+NO
+
+{% endif %}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+10. Date of Leaving School
+</td>
+
+<td class="value">
+{{ tc.leaving_date|date:"d-m-Y" }}
+</td>
+
+<td class="label">
+Last Attendance
+</td>
+
+<td class="value">
+{{ tc.last_attended_date|date:"d-m-Y" }}
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+11. Reason for Leaving
+</td>
+
+<td colspan="3" class="value">
+{{ tc.reason }}
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+12. Conduct
+</td>
+
+<td colspan="3" class="value">
+{{ tc.conduct }}
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+13. Remarks
+</td>
+
+<td colspan="3" class="value">
+{{ tc.remarks }}
+</td>
+
+</tr>
+
+</table>
+
+<br><br><br>
+
+<table>
+
+<tr>
+
+<td style="text-align:center;width:33%;">
+
+____________________
+
+<br>
+
+Class Teacher
+
+</td>
+
+<td style="text-align:center;width:33%;">
+
+____________________
+
+<br>
+
+Office Superintendent
+
+</td>
+
+<td style="text-align:center;width:33%;">
+
+____________________
+
+<br>
+
+Principal
+
+</td>
+
+</tr>
+
+</table>
+
+<br><br>
+
+<div style="text-align:center;font-size:12px;">
+
+This is a computer generated Transfer Certificate.
+
+</div>
+
+</body>
+
+</html>

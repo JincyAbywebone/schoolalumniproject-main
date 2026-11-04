@@ -1,0 +1,157 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                    <form method="POST">
+                        {% csrf_token %}
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <div class="card-body">
+                       <div class="form-group">
+                            <label>Course</label>
+                            <select name="course" class="form-control" id='course'>
+                                <option value="">select Course</option>
+                                {% for course in courses  %}
+                                <option value="{{course.id}}">{{course.name }}-{{course.division}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group" id='subject_data' >
+                            <label>Subject</label>
+                            <select name="subject_data" class="form-control" id='subject_data'>
+                                <option value="select subject"> Subject</option>
+                                {% for subject in subjects  %}
+                                <option value="{{subject.id}}">{{subject.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                      
+                        <div class="form-group">
+                            <label>Term</label>
+                            <select name="term_wise" class="form-control" id='term_wise'>
+                                <option value="">Select Term</option>
+                                <option value="Term-1">Term-1</option>
+                                <option value="Term-2">Term-2</option>
+                            </select>
+                        </div>
+
+
+
+                        {{ form }}
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                        <button type="Submit" id='curriculam_add' class="btn btn-primary btn-block"  with messages=messages >
+                          Submit  </button>
+                            
+                        <div class="form-group" id="curriculam_data">
+
+                        </div>
+                    </div>
+                </form>
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block custom_js %}
+<script>
+ 
+       
+        //--------------------------------------------
+        
+        $("#course").change(function() {
+            var course = $("#course").val()
+            //alert(Course)
+             $("#subject_data").html(null)
+             if (course.length  == 0){
+                alert("Please select course");
+                return false;
+             }
+             $.ajax({
+                url: "{% url 'get_course' %}",
+                type: 'POST',
+                data: {
+                    course: course,
+                     }
+            }).done(function (response) {
+              
+                    var json_data = JSON.parse(response)
+                    if (json_data.length < 1) {
+                        alert("No data to display")
+                    } else {
+                       
+                        var div_data = "<hr/><div class='form-group'> <label> Subject</label> <select class='student_list form-control' name='subject_data1' id='subject_data1'> "
+    
+                        for (key in json_data) {
+                            div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['name'] + " </option>"
+                        }
+                      
+                        $("#subject_data").html(div_data)
+                    }
+                }).fail(function (response) {
+                    alert("Error in fetching students")
+            
+    
+            })
+        });
+        //........................................
+        $("#curriculam_add").click(function (event) {
+            event.preventDefault(); // Prevent default form submission
+        
+            var course = $("#course").val();
+            var subject_data = $("#subject_data1").val();
+            var term_wise = $("#term_wise").val();
+            var lesson = $("#id_lesson").val();
+            var title = $("#id_title").val();
+           
+        
+            if (!course || !subject_data || !term_wise || !lesson || !title) {
+                alert("Please select course, subject, term, title and lesson.");
+                return false;
+            }
+        
+            $.ajax({
+                url: "{% url 'get_curriculam' %}",
+                type: 'POST',
+                data: {
+                    course: course,
+                    subject_data: subject_data,
+                    term_wise: term_wise,
+                    lesson: lesson,
+                    title: title,
+                    csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val()
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        alert(response.message); // Display success message
+                        location.reload(); // Reload page if needed
+                    } else {
+                        alert(response.message); // Display error message in alert
+                    }
+                },
+                error: function () {
+                    alert("An error occurred. Please try again.");
+                }
+            });
+        });
+</script>
+{% endblock custom_js %}

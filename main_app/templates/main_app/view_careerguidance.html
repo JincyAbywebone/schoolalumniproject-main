@@ -1,0 +1,75 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Programme Name</th>
+                                    <th>Programme Date</th>
+                                    <th>Programme Type</th>
+                                    <th>Programme Venue</th>
+                                    <th>Programme Status</th>
+                                    <th>Department</th>
+                                    <!-- <th>Description</th> -->
+                                    <th>Image</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for programmes in programme %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ programmes.programme_name }}</td>
+                                    <td>{{ programmes.programme_date }}</td>
+                                    <td>{{ programmes.programme_type }}</td>
+                                    <td>{{ programmes.programme_venue }}</td>
+                                    <td>
+                                        {% if programmes.programme_status == 'Scheduled' %}
+                                            <span class="badge badge-primary">{{ programmes.programme_status }}</span>
+                                        {% elif programmes.programme_status == 'Conducted' %}
+                                            <span class="badge badge-success">{{ programmes.programme_status }}</span>
+                                        {% elif programmes.programme_status == 'Postponed' %}
+                                            <span class="badge badge-warning">{{ programmes.programme_status }}</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">{{ programmes.programme_status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ programmes.department }}</td>
+                                    <!-- <td>{{ programmes.description }}</td> -->
+                                    
+                                    <td>
+                                        {% if programmes.image == "" or not programmes.image %}
+                                            No Image
+                                        {% else %}
+                                            <img class="img img-fluid mb-2" height="100" width="100"
+                                                src="{{ programmes.image.url }}" alt="">
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">No career guidance programmes available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

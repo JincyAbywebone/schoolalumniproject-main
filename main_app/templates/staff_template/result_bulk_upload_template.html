@@ -1,0 +1,357 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+  {% if message %}
+<div class="alert alert-success">{{ message }}</div>
+{% endif %}
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">{{ page_title }}</h3>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Select Course</label>
+                                <select name="course" class="form-control" id="course">
+                                    <option value="">Select Course</option>
+                                    {% for course in courses %}
+                                    <option value="{{ course.id }}">{{ course.name }} - {{ course.division }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="subject_data_value">
+                                <label>Select Subject</label>
+                                <select name="subject_data_value" class="form-control" id="subject_data_value1">
+                                    <option value="">Select Subject</option>
+                                    {% for subject in subjects %}
+                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Select Exam</label>
+                                <select class="form-control" id="exam_name" name="exam_name">
+                                    <option value="">Select Exam</option>
+                                    {% for examname in examnames %}
+                                    <option value="{{ examname.id }}">{{ examname.exam_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Select Term</label>
+                                <select class="form-control" id="term_select" name="term_select">
+                                    <option value="">Select Term</option>
+                                </select>
+                            </div>
+
+                            {{ form }}
+                        </div>
+
+                        <div class="card-footer">
+                            <button type="button" id="student_details" class="btn btn-primary btn-block">Submit</button>
+                            <div class="form-group" id="bulk_data_list"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function () {
+
+    // Course selection → Subject list
+    $("#course").change(function () {
+        let course = $(this).val();
+        if (!course) {
+            alert("Please select a course");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_course_list' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                let subjects = JSON.parse(response);
+                let subjectOptions = "<option value=''>Select Subject</option>";
+                subjects.forEach(subject => {
+                    subjectOptions += `<option value="${subject.id}">${subject.name}</option>`;
+                });
+                $("#subject_data_value1").html(subjectOptions);
+            },
+            error: function () {
+                alert("Error fetching subjects");
+            }
+        });
+    });
+
+    // Exam name → Term list
+    $("#exam_name").change(function () {
+        let exam_id = $(this).val();
+        $("#term_select").html("<option value=''>----</option>");
+
+        if (!exam_id) {
+            alert("Please select an exam");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_term_list' %}",
+            type: 'POST',
+            data: {
+                exam_name: exam_id,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (terms) {
+                if (!terms.length) {
+                    alert("No terms available");
+                    return;
+                }
+                terms.forEach(item => {
+                    $("#term_select").append(`<option value="${item.name}">${item.name}</option>`);
+                });
+            },
+            error: function () {
+                alert("Error fetching terms");
+            }
+        });
+    });
+
+    // Fetch student list
+   $("#student_details").click(function () {
+    var course = $("#course").val();
+    var subject_data_value1 = $("#subject_data_value1").val();
+    $("#bulk_data_list").html(null);
+
+    if (course.length === 0 || subject_data_value1.length === 0) {
+        alert("Please select course and subject");
+        return false;
+    }
+
+    $.ajax({
+        url: "{% url 'get_students_bulk' %}",
+        type: 'POST',
+        data: {
+            course: course,
+            subject_data_value1: subject_data_value1,
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+        }
+    }).done(function (response) {
+        var json_data = JSON.parse(response);
+
+        if (json_data.length < 1) {
+            alert("No data to display");
+        } else {
+            var div_data = "<hr/><div class='form-group'><label>Student List</label><table class='table table-bordered'>";
+            div_data += "<thead><tr><th>Sl.No</th><th>Admission Number</th><th>Student Name</th><th class='test-score-col'>Test Paper Score</th><th class='exam-score-col'>Periodic Test Score</th><th class='semester-score-col'>Semester Score</th><th>Remarks</th></tr></thead>";
+            div_data += "<tbody>";
+
+            for (key in json_data) {
+                let serial = parseInt(key) + 1;
+                let student = json_data[key];
+                div_data += "<tr>";
+                div_data += `<td data-student-id='${student.id}'>${serial}</td>`;
+                div_data += `<td data-student-id='${student.id}'>${student.admission_number}</td>`;
+                div_data += `<td>${student.name}</td>`;
+                div_data += `<td class='test-score-col'><input class='form-control' name='test_score' id='test_score_${student.id}' placeholder='Test Score' max='20' min='0' required type='number' /></td>`;
+                div_data += `<td class='exam-score-col'><input class='form-control' name='exam_score' id='exam_score_${student.id}' placeholder='Exam Score' max='20' min='0' required type='number' /></td>`;
+                div_data += `<td class='semester-score-col'><input class='form-control' name='semester_score' id='semester_score_${student.id}' placeholder='Semester Score' max='20' min='0' required type='number' /></td>`;
+                div_data += `<td><input list='remarkOptions' name='remarks' class='form-control' value='Absent' data-auto='1'><datalist id='remarkOptions'><option value='Outstanding'><option value='Excellent'><option value='Very Good'><option value='Good'><option value='Satisfactory'><option value='Average'> <option value='Below Average'> <option value='Need Improvement'><option value='Absent'></datalist></td>`;
+                div_data += "</tr>";
+            }
+
+            div_data += "</tbody></table>";
+            div_data += "<div class='form-group'><button id='save_results' class='btn btn-success' type='submit'>Save Data</button></div>";
+            $("#bulk_data_list").html(div_data);
+
+            // Enable relevant inputs
+            $("input[id^='test_score_']").prop("disabled", true);
+            $("input[id^='exam_score_']").prop("disabled", true);
+            $("input[id^='semester_score_']").prop("disabled", true);
+
+            let selectedText = $("#exam_name option:selected").text().toLowerCase().trim();
+            if (selectedText.startsWith("tp")) {
+                $("input[id^='test_score_']").prop("disabled", false);
+            } else if (selectedText.startsWith("pt")) {
+                $("input[id^='exam_score_']").prop("disabled", false);
+            } else if (selectedText.includes("semester")) {
+                $("input[id^='semester_score_']").prop("disabled", false);
+            }
+        }
+    }).fail(function () {
+        alert("Error in fetching students");
+    });
+});
+
+// Save button logic
+$(document).on("click", "#save_results", function (e) {
+    e.preventDefault();
+
+    let data = [];
+    let term = $("#term_select").val();
+    let subject_id = $("#subject_data_value1").val();
+
+    if (!term || !subject_id) {
+        alert("Please select Term and Subject.");
+        return;
+    }
+
+    $("#bulk_data_list tbody tr").each(function () {
+        let student_id = $(this).find("td:first").data("student-id");
+        let testVal = $(this).find("input[name='test_score']").val();
+        let examVal = $(this).find("input[name='exam_score']").val();
+        let semesterVal = $(this).find("input[name='semester_score']").val();
+
+        let test = parseInt(testVal) || 0;
+        let exam = parseInt(examVal) || 0;
+        let semester = parseInt(semesterVal) || 0;
+
+        let remarkInput = $(this).find("input[name='remarks']");
+        let remarks = remarkInput.attr('data-auto') === "1"
+                 ? calculateRemarks(testVal, examVal, semesterVal)
+                 : remarkInput.val();  // preserve user-entered
+
+        let exam_type = $("#exam_name option:selected").text().toLowerCase();
+        let course = $("#course").val();
+
+        data.push({
+            student_id,
+            subject_id,
+            test,
+            exam,
+            semester,
+            remarks,
+            term,
+            exam_type,
+            course,
+        });
+    });
+
+    if (data.length === 0) {
+        alert("No data found.");
+        return;
+    }
+
+    $("#save_results").prop("disabled", true).text("Saving...");
+
+    $.ajax({
+        url: "{% url 'save_student_results' %}",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        success: function (res) {
+            if (res.status === "success") {
+                alert(res.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                alert("Error: " + res.message);
+                $("#save_results").prop("disabled", false).text("Save Data");
+            }
+        },
+        error: function (xhr) {
+            let message = "Something went wrong.";
+            try {
+                let res = JSON.parse(xhr.responseText);
+                message = res.message || message;
+            } catch (e) {
+                message = xhr.statusText || message;
+            }
+            alert("Error: " + message);
+            $("#save_results").prop("disabled", false).text("Save Data");
+        }
+    });
+});
+
+function calculateRemarks(testVal, examVal, semesterVal) {
+    let test = Number(testVal);
+    let exam = Number(examVal);
+    let semester = Number(semesterVal);
+
+    if ((testVal && (test < 0 || test > 20)) ||
+        (examVal && (exam < 0 || exam > 20)) ||
+        (semesterVal && (semester < 0 || semester > 20))) {
+        return "Invalid Score";
+    }
+
+    let total = 0;
+    let count = 0;
+
+    if (!isNaN(testVal) && testVal !== '') { total += test; count += 1; }
+    if (!isNaN(examVal) && examVal !== '') { total += exam; count += 1; }
+    if (!isNaN(semesterVal) && semesterVal !== '') { total += semester; count += 1; }
+
+    if (count === 0) return "Absent";
+
+    let percentage = (total / (count * 20)) * 100;
+
+    if (percentage >= 95) return "Outstanding";
+    if (percentage >= 90) return "Excellent";
+    if (percentage >= 85) return "Very Good";
+    if (percentage >= 80) return "Good";
+    if (percentage >= 70) return "Satisfactory";
+    if (percentage >= 60) return "Average";
+    if (percentage >= 50) return "Below Average";
+    return "Need Improvement";
+}
+
+// Update remarks only if user hasn't changed it
+$(document).on('input', "input[name='test_score'], input[name='exam_score'], input[name='semester_score']", function () {
+    let row = $(this).closest('tr');
+    let testVal = row.find("input[name='test_score']").val();
+    let examVal = row.find("input[name='exam_score']").val();
+    let semesterVal = row.find("input[name='semester_score']").val();
+
+    let remarkInput = row.find("input[name='remarks']");
+    if (remarkInput.attr("data-auto") === "1") {
+        let remarks = calculateRemarks(testVal, examVal, semesterVal);
+        remarkInput.val(remarks);
+    }
+});
+
+// Mark remark as "user-edited"
+$(document).on("input", "input[name='remarks']", function () {
+    $(this).attr("data-auto", "0");
+});
+
+// Initial auto-fill (optional)
+$(document).ready(function () {
+    $('table tbody tr').each(function () {
+        let row = $(this);
+        let testVal = row.find("input[name='test_score']").val();
+        let examVal = row.find("input[name='exam_score']").val();
+        let semesterVal = row.find("input[name='semester_score']").val();
+
+        let remarks = calculateRemarks(testVal, examVal, semesterVal);
+        let remarkInput = row.find("input[name='remarks']");
+        remarkInput.val(remarks).attr("data-auto", "1");
+    });
+});
+});
+</script>
+{% endblock custom_js %}

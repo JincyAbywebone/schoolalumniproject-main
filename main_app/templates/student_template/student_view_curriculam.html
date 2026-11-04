@@ -1,0 +1,53 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Subject</th>
+                                    <th>Term</th>
+                                    <th>Lesson</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{result.subject.subject.name}}</td>
+                                    <td>{{result.term}}</td>
+                                    <td>{{result.lesson}}</td>
+                                    <td>
+                                        {% if result.status == False %}
+                                        <input type="checkbox" name="status" value=" false " unchecked hidden>
+                                        {% else %}
+                                        <input type="checkbox" name="status" value=" true " checked>
+                                        {% endif %}
+                                   
+                                 
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

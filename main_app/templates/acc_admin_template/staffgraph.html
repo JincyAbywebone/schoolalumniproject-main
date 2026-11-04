@@ -1,0 +1,196 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block content %}
+
+<div class="container mt-4">
+  <form method="GET" class="mb-4"> 
+    <div class="row">
+      <div class="col-md-4">
+        <select name="staff_data" id="staff_data" class="form-control">
+          <option value="">Select Staff</option>
+          {% for staff in staff_members %}
+          <option value="{{ staff.id }}">{{ staff }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <select name="subject_data_value" id="subject_data_value" class="form-control">
+          <option value="">Select Exam</option>
+          {% for exam in exam_type %}
+          <option value="{{ exam.id }}">{{ exam.exam_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+
+   <div class="col-md-4">
+  
+    <select class="form-control" id="session_select" name="session_select">
+        {% if session %}
+            <option value="{{ session.id }}" selected>
+                {{ session.start_year }} - {{ session.end_year }}
+            </option>
+        {% else %}
+            <option value="">No Active Session</option>
+        {% endif %}
+    </select>
+</div>
+
+
+
+      
+
+      <div class="col-md-2 mt-3">
+        <button type="button" id="student_graphdata" class="btn btn-primary w-100">View Graph</button>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-md-12" id="graphContainer">
+        <canvas id="marksGraph" width="900" height="400"></canvas>
+        
+      </div>
+
+    </div>
+    <div class="mt-4 text-center">
+  <button type="button" class="btn btn-secondary" onclick="printGraph()">Print Graph</button>
+</div>
+           <div class="mt-4">
+  <h5>Performance Legend</h5>
+   <div class="row">
+ 
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#146b0cff;"></span> Distinction (≥ 75%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#28e141ff;"></span> First Class (≥ 60%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#ffc107;"></span> Second Class (≥ 50%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#e3d10cff;"></span> Pass / Average (≥ 35%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#f6061eff;"></span> Fail (< 35%)</div>
+  </div>
+  
+  </form> 
+</div>
+
+{% endblock content %}
+
+{% block custom_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function () {
+  $('#student_graphdata').click(function (e) {
+    e.preventDefault(); 
+    loadGraph();        
+  });
+});
+
+let myCharts = [];
+
+function loadGraph() {
+  const examtId = document.getElementById('subject_data_value').value;
+  const staffId = document.getElementById('staff_data').value;
+  const sessionId = document.getElementById('session_select').value;
+
+  if (!examtId || !staffId || !sessionId) {
+    alert("Please select all fields");
+    return;
+  }
+
+  // പഴയ charts destroy ചെയ്യുക
+  if (myCharts.length) {
+    myCharts.forEach(chart => chart.destroy());
+    myCharts = [];
+  }
+
+  fetch(`/acc_admin/get_staff_graph/?staff_id=${staffId}&exam_id=${examtId}&session_id=${sessionId}`)
+  .then(response => response.json())
+  .then(data => {
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    const container = document.getElementById('graphContainer');
+    container.innerHTML = '';
+
+    data.subjects.forEach((subj) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 900;
+      canvas.height = 400;
+      container.appendChild(canvas);
+
+      const datasets = subj.students.map((student) => {
+        const marks = subj.labels.map(label => student.marks[label]?.percentage ?? null);
+        const colors = subj.labels.map(label => student.marks[label]?.color ?? "#d73535ff");
+
+        return {
+          label: student.student_name,
+          data: marks,
+          borderColor: colors,
+          backgroundColor: colors,
+          tension: 0.3,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          spanGaps: true
+        };
+      });
+
+      const chartInstance = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: subj.labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: `${subj.course_name} - ${subj.subject_name} (Percentage)`
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              title: { display: true, text: 'Percentage (%)' }
+            },
+            x: {
+              title: { display: true, text: 'Exam' }
+            }
+          }
+        }
+      });
+
+      myCharts.push(chartInstance);
+    });
+  })
+  .catch(error => {
+    console.error("Error loading graph data:", error);
+    alert("Failed to load marks data.");
+  });
+}
+function printGraph() {
+  const canvasList = document.querySelectorAll("#graphContainer canvas");
+  const printWindow = window.open('', '', 'height=600,width=900');
+
+  printWindow.document.write('<html><head><title>Print Graph</title></head><body>');
+  
+  canvasList.forEach((canvas, index) => {
+    const imgData = canvas.toDataURL("image/png"); // canvas → image
+    printWindow.document.write(`<div style="margin-bottom:30px;"><img src="${imgData}" style="width:100%; max-width:900px;"/></div>`);
+  });
+
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 500);
+}
+</script>
+{% endblock custom_js %}
+
+

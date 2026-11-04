@@ -1,0 +1,251 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<style>
+#studentPieChart {
+    max-width: 600px;
+    max-height: 600px;
+    margin: auto;
+}
+</style>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <select name="course" id="course" required class="form-control">
+                <option value="">-- Select Course & Division --</option>
+                {% for course in courses %}
+                <option value="{{ course.id }}" {% if course.id|stringformat:'s' == selected_course %}selected{% endif %}>
+                    {{ course.name }} - {{ course.division }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <select name="subject_data_value" id="subject_data_value" class="form-control">
+                <option value="">Select Subject</option>
+                {% for subject in subjects %}
+                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <select name="staff_data" id="staff_data" class="form-control">
+                <option value="">Select Staff</option>
+                {% for staff in staff_members %}
+                <option value="{{ staff.id }}">{{ staff }}</option>
+                {% endfor %}
+            </select>
+        </div>
+<br>
+        <div class="col-md-4">
+            <select name="exam_data" id="exam_data" class="form-control">
+                <option value="">Select Exam</option>
+                {% for exam in exam_type %}
+                <option value="{{ exam.id }}">{{ exam.exam_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+
+<div class="col-md-4">
+  
+    <select class="form-control" id="session_select" name="session_select">
+        {% if session %}
+            <option value="{{ session.id }}" selected>
+                {{ session.start_year }} - {{ session.end_year }}
+            </option>
+        {% else %}
+            <option value="">No Active Session</option>
+        {% endif %}
+    </select>
+</div>
+
+
+
+
+
+        <div class="col-md-2 mt-3">
+            <button type="button" id="student_graphdata" class="btn btn-primary w-100">View Graph</button>
+     
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <canvas id="studentPieChart" width="500" height="500"> </canvas>
+</div>
+        </div>
+ <div class="mt-4">
+  <h5>Performance Legend</h5>
+  <div class="row">
+   <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#146b0cff;"></span> Distinction (≥ 75%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#28e141ff;"></span> First Class (≥ 60%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#ffc107;"></span> Second Class (≥ 50%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#e3d10cff;"></span> Pass / Average (≥ 35%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#f6061eff;"></span> Fail (< 35%)</div>
+  </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+
+{% endblock content %}
+
+{% block custom_js %}
+
+
+<script>
+
+
+function loadPieChart() {
+    var course = $('#course').val();
+    var subject = $('#subject_data_value').val();
+    var staff = $('#staff_data').val();
+    var exam = $('#exam_data').val();
+    var session = $('#session_select').val();
+
+    if (!course || !subject || !staff || !exam || !session) {
+        alert("Please select all fields");
+        return;
+    }
+
+    fetch("{% url 'get_student_pie_data' %}?course=" + encodeURIComponent(course) +
+          "&subject=" + encodeURIComponent(subject) +
+          "&staff=" + encodeURIComponent(staff) +
+          "&exam=" + encodeURIComponent(exam) +
+          "&session=" + encodeURIComponent(session))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Fetched Data:", data);
+
+       
+        if (!data.labels || !data.labels.length) {
+                alert("No data available for selected inputs.");
+                return;
+            }
+
+            const ctx = document.getElementById('studentPieChart')?.getContext('2d');
+if (!ctx) {
+    console.error("Canvas element #studentPieChart not found.");
+    return;
+}
+
+           if (window.studentPieChart instanceof Chart) {
+    window.studentPieChart.destroy();
+}
+
+window.studentPieChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+        labels: data.labels,
+        datasets: [{
+            data: data.percentages,
+            backgroundColor: data.colors
+        }]
+    },
+    options: {
+        plugins: {
+            title: {
+                display: true,
+                text: 'Student Performance in Selected Exam (%)'
+            },
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+        })
+        .catch(err => {
+            console.error("Error fetching pie chart data:", err);
+            alert("An error occurred while loading the graph.");
+        });
+}
+
+$(document).ready(function () {
+    $('#student_graphdata').click(function (e) {
+        e.preventDefault();
+        loadPieChart();
+    });
+  
+    // Your other dropdown AJAX calls stay the same
+
+     $('#course').change(function () {
+        var course = $(this).val();
+
+        $('#subject_data_value').html('<option value="">Select Subject</option>');
+        $('#staff_data').html('<option value="">Select Staff</option>');
+
+        if (!course) {
+            alert('Please select a course');
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "get_subject_staff" %}',
+            type: 'POST',
+            data: {
+                course: course,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (response) {
+                if (response.length < 1) {
+                    alert('No subjects available for this course');
+                    return;
+                }
+                var options = '<option value="">Select Subject</option>';
+                response.forEach(function (item) {
+                    options += `<option value="${item.id}">${item.name}</option>`;
+                });
+                $('#subject_data_value').html(options);
+            },
+            error: function () {
+                alert('Error loading subjects');
+            }
+        });
+    });
+
+    $('#subject_data_value').change(function () {
+        var course = $('#course').val();
+        var subject = $('#subject_data_value').val();
+
+
+        if (!course || !subject) {
+            alert('Please select both course and subject');
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_staff' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                subject: subject,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (staff_members) {
+                let staffOptions = "<option value=''>Select Staff</option>";
+                staff_members.forEach(staff => {
+                    staffOptions += `<option value="${staff.id}">${staff.name}</option>`;
+                });
+                $("#staff_data").html(staffOptions);
+            },
+            error: function () {
+                alert("Error fetching staff");
+            }
+        });
+    });
+
+});
+
+</script>
+{% endblock custom_js %}

@@ -1,0 +1,379 @@
+<!-- Inline Upload Progress — Buttons Fuse & Stretch into Progress Bar -->
+<style>
+    /* ── Button converge transition (JS sets the translateX) ── */
+    .btn-morph-out {
+        transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+        pointer-events: none;
+    }
+
+    .btn-morph-out.converging {
+        opacity: 0;
+    }
+
+    /* ── The fused pill that forms at center, then stretches into bar ── */
+    .morph-progress-wrap {
+        position: relative;
+        height: 56px;
+        border-radius: 9999px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(37, 99, 235, 0.18);
+
+        /* Start as a small pill at center */
+        width: 80px;
+        margin: 0 auto;
+        opacity: 0;
+        transform: scaleY(0.5);
+        will-change: width, transform, opacity;
+
+        /* Stretch transition */
+        transition: opacity 0.2s ease;
+    }
+
+    /* Phase 2a: pill appears (small) */
+    .morph-progress-wrap.pill-visible {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+
+    /* Phase 2b: pill stretches to full width with smooth jelly overshoot */
+    .morph-progress-wrap.stretching {
+        animation: jellyStretch 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes jellyStretch {
+        0%   { width: 80px;  transform: scaleY(0.9); }
+        35%  { width: 85%;   transform: scaleY(0.88); }
+        55%  { width: 103%;  transform: scaleY(1.05); }
+        72%  { width: 99%;   transform: scaleY(0.98); }
+        88%  { width: 100.3%; transform: scaleY(1.01); }
+        100% { width: 100%;  transform: scaleY(1); }
+    }
+
+    /* Track — blue gradient (Upload button colour) */
+    .morph-progress-track {
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        background: linear-gradient(135deg, #004ac6, #2563eb);
+    }
+
+    /* Fill — red/rose gradient (Cancel button colour), LED effect */
+    .morph-progress-fill {
+        position: absolute;
+        top: 0; left: 0; bottom: 0;
+        width: 0%;
+        border-radius: 9999px;
+        background: linear-gradient(135deg, #ef4444, #e11d48);
+        transition: width 0.5s cubic-bezier(0.25, 1.0, 0.5, 1);
+        box-shadow: 0 0 18px 4px rgba(239, 68, 68, 0.45),
+                    inset 0 1px 1px rgba(255,255,255,0.25);
+    }
+
+    /* Animated LED shimmer */
+    .morph-progress-fill::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: 9999px;
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255,255,255,0.25) 45%,
+            rgba(255,255,255,0.35) 50%,
+            rgba(255,255,255,0.25) 55%,
+            transparent 100%
+        );
+        background-size: 200% 100%;
+        animation: ledShimmer 1.8s linear infinite;
+    }
+
+    @keyframes ledShimmer {
+        0%   { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Text overlay */
+    .morph-progress-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        color: #fff;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+        z-index: 2;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s ease 0.6s;
+    }
+
+    .morph-progress-text.visible {
+        opacity: 1;
+    }
+
+    .morph-progress-pct {
+        font-size: 16px;
+        letter-spacing: 0.5px;
+    }
+
+    .morph-progress-detail {
+        font-weight: 500;
+        font-size: 12px;
+        opacity: 0.85;
+    }
+
+    /* ── Success glow ── */
+    .morph-progress-fill.success {
+        background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+        box-shadow: 0 0 24px 8px rgba(34, 197, 94, 0.5),
+                    inset 0 1px 1px rgba(255,255,255,0.3) !important;
+    }
+    .morph-progress-fill.success::after {
+        animation: none;
+        background: transparent;
+    }
+
+    /* ── Error shake ── */
+    @keyframes errorShake {
+        0%, 100% { transform: translateX(0) scaleX(1); }
+        8%       { transform: translateX(-8px) scaleX(0.97); }
+        18%      { transform: translateX(8px) scaleX(1.03); }
+        28%      { transform: translateX(-6px) scaleX(0.98); }
+        38%      { transform: translateX(6px) scaleX(1.02); }
+        50%      { transform: translateX(-4px) scaleX(0.99); }
+        62%      { transform: translateX(4px) scaleX(1.01); }
+        74%      { transform: translateX(-2px); }
+        86%      { transform: translateX(2px); }
+    }
+
+    .morph-progress-wrap.error-shake {
+        animation: errorShake 0.7s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    /* ── Reverse: bar shrinks back to pill then disappears ── */
+    @keyframes jellyCollapse {
+        0%   { width: 100%; transform: scaleY(1) scaleX(1); opacity: 1; }
+        25%  { width: 100%; transform: scaleY(1.06) scaleX(0.95); opacity: 1; }
+        50%  { width: 50%;  transform: scaleY(0.9) scaleX(1.03); opacity: 0.8; }
+        75%  { width: 15%;  transform: scaleY(0.7) scaleX(0.98); opacity: 0.4; }
+        100% { width: 60px; transform: scaleY(0.4) scaleX(0.6); opacity: 0; }
+    }
+
+    .morph-progress-wrap.morph-out {
+        animation: jellyCollapse 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* ── Button re-entry (JS drives direction) ── */
+    .btn-morph-in {
+        transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var forms = document.querySelectorAll('form[enctype="multipart/form-data"]');
+        if (forms.length === 0) return;
+
+        var mainForm = forms[0];
+        var btnUpload = document.getElementById('btnUpload');
+        var btnCancel = document.getElementById('btnCancel');
+        var ctaWrap = document.getElementById('uploadCTA');
+        var btnRow = document.getElementById('uploadBtnRow');
+
+        if (!btnUpload || !ctaWrap) return;
+
+        btnUpload.addEventListener('click', function (e) {
+            if (!mainForm.checkValidity()) return;
+            e.preventDefault();
+
+            // ═══════════════════════════════════════════
+            // PHASE 1: Slide buttons toward each other
+            // ═══════════════════════════════════════════
+            var rowRect = btnRow.getBoundingClientRect();
+            var rowCenterX = rowRect.left + rowRect.width / 2;
+
+            var uploadRect = btnUpload.getBoundingClientRect();
+            var uploadCenterX = uploadRect.left + uploadRect.width / 2;
+            var uploadDist = rowCenterX - uploadCenterX;
+
+            var cancelDist = 0;
+            if (btnCancel) {
+                var cancelRect = btnCancel.getBoundingClientRect();
+                var cancelCenterX = cancelRect.left + cancelRect.width / 2;
+                cancelDist = rowCenterX - cancelCenterX;
+            }
+
+            // Set up transitions
+            btnUpload.classList.add('btn-morph-out');
+            if (btnCancel) btnCancel.classList.add('btn-morph-out');
+
+            // Force reflow
+            void btnUpload.offsetHeight;
+
+            // Slide + squash + fade
+            btnUpload.style.transform = 'translateX(' + uploadDist + 'px) scaleX(0.2) scaleY(0.6)';
+            btnUpload.classList.add('converging');
+
+            if (btnCancel) {
+                btnCancel.style.transform = 'translateX(' + cancelDist + 'px) scaleX(0.2) scaleY(0.6)';
+                btnCancel.classList.add('converging');
+            }
+
+            // ═══════════════════════════════════════════
+            // PHASE 2: Fused pill appears, then stretches
+            // ═══════════════════════════════════════════
+            setTimeout(function () {
+                // Hide buttons entirely
+                if (btnRow) btnRow.style.display = 'none';
+
+                // Create the progress bar as a small pill
+                var wrap = document.createElement('div');
+                wrap.className = 'morph-progress-wrap';
+                wrap.id = 'morphProgressWrap';
+                wrap.innerHTML =
+                    '<div class="morph-progress-track"></div>' +
+                    '<div class="morph-progress-fill" id="morphFill"></div>' +
+                    '<div class="morph-progress-text" id="morphText">' +
+                        '<span class="morph-progress-pct" id="morphPct">0%</span>' +
+                        '<span class="morph-progress-detail" id="morphDetail">Preparing…</span>' +
+                    '</div>';
+                ctaWrap.appendChild(wrap);
+
+                // Phase 2a: Make the small pill visible at center
+                void wrap.offsetHeight; // reflow
+                wrap.classList.add('pill-visible');
+
+                // Phase 2b: After a tiny beat, stretch it out with jelly
+                setTimeout(function () {
+                    wrap.classList.add('stretching');
+
+                    // Show text after the stretch settles
+                    setTimeout(function () {
+                        var textEl = document.getElementById('morphText');
+                        if (textEl) textEl.classList.add('visible');
+                    }, 500);
+
+                    // ═══════════════════════════════════════════
+                    // PHASE 3: Start XHR upload
+                    // ═══════════════════════════════════════════
+                    startUpload();
+                }, 120);
+            }, 600);
+        });
+
+        function startUpload() {
+            var fill = document.getElementById('morphFill');
+            var pct = document.getElementById('morphPct');
+            var detail = document.getElementById('morphDetail');
+            var wrap = document.getElementById('morphProgressWrap');
+
+            var formData = new FormData(mainForm);
+            var xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', function (ev) {
+                if (ev.lengthComputable) {
+                    var p = Math.round((ev.loaded / ev.total) * 100);
+                    fill.style.width = p + '%';
+                    pct.textContent = p + '%';
+
+                    var loaded = formatSize(ev.loaded);
+                    var total = formatSize(ev.total);
+                    detail.textContent = loaded + ' / ' + total;
+
+                    // Intensify LED glow as progress grows
+                    var glow = Math.min(0.7, 0.3 + (p / 100) * 0.4);
+                    fill.style.boxShadow =
+                        '0 0 ' + (18 + p * 0.2) + 'px ' + (4 + p * 0.1) + 'px rgba(239,68,68,' + glow + '),' +
+                        'inset 0 1px 1px rgba(255,255,255,0.25)';
+
+                    if (p >= 100) {
+                        pct.textContent = '100%';
+                        detail.textContent = 'Processing on server…';
+                    }
+                }
+            });
+
+            xhr.addEventListener('load', function () {
+                if (xhr.status >= 200 && xhr.status < 400) {
+                    fill.style.width = '100%';
+                    fill.classList.add('success');
+                    pct.textContent = '✓';
+                    detail.textContent = 'Upload complete!';
+
+                    setTimeout(function () {
+                        if (xhr.responseURL) {
+                            window.location.href = xhr.responseURL;
+                        } else {
+                            window.location.reload();
+                        }
+                    }, 900);
+                } else {
+                    showError(wrap, fill, pct, detail, 'Server returned an error.');
+                }
+            });
+
+            xhr.addEventListener('error', function () {
+                showError(wrap, fill, pct, detail, 'Network error — check your connection.');
+            });
+
+            xhr.open('POST', mainForm.action || window.location.href, true);
+            xhr.send(formData);
+        }
+
+        function showError(wrap, fill, pct, detail, msg) {
+            wrap.classList.add('error-shake');
+            pct.textContent = '✗';
+            detail.textContent = msg;
+
+            // Reverse: bar collapses back to pill, then buttons re-emerge
+            setTimeout(function () {
+                wrap.classList.add('morph-out');
+
+                setTimeout(function () {
+                    wrap.remove();
+                    if (btnRow) btnRow.style.display = '';
+
+                    // Buttons are still in "converged" state — animate them back out
+                    btnUpload.classList.remove('converging');
+                    btnUpload.classList.add('btn-morph-in');
+                    void btnUpload.offsetHeight;
+                    btnUpload.style.transform = 'translateX(0) scaleX(1) scaleY(1)';
+                    btnUpload.style.opacity = '1';
+
+                    if (btnCancel) {
+                        btnCancel.classList.remove('converging');
+                        btnCancel.classList.add('btn-morph-in');
+                        void btnCancel.offsetHeight;
+                        btnCancel.style.transform = 'translateX(0) scaleX(1) scaleY(1)';
+                        btnCancel.style.opacity = '1';
+                    }
+
+                    // Clean up
+                    setTimeout(function () {
+                        btnUpload.classList.remove('btn-morph-out', 'btn-morph-in');
+                        btnUpload.style.transform = '';
+                        btnUpload.style.opacity = '';
+                        if (btnCancel) {
+                            btnCancel.classList.remove('btn-morph-out', 'btn-morph-in');
+                            btnCancel.style.transform = '';
+                            btnCancel.style.opacity = '';
+                        }
+                    }, 900);
+                }, 600);
+            }, 2000);
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+            return (bytes / 1073741824).toFixed(2) + ' GB';
+        }
+    });
+</script>

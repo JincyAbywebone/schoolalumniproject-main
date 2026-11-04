@@ -1,0 +1,89 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Add Academic Admin{% endblock breadcrumb %}
+{% block page_heading %}{{ page_title }}{% endblock page_heading %}
+
+{% block custom_css %}
+<style>
+    .invalid {
+        font-weight: 600;
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+    .valid {
+        font-weight: 600;
+        color: #10b981;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto">
+
+    <!-- Header Action Bar Card -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">person_add</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Create Academic Administrator</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Register an academic administrator or principal user into the system.</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'manage_acc_admin' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                <span>Back to Admins</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Container Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 sm:px-8 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-pink-600 text-lg">manage_accounts</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Administrator Information</span>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium">* Required Fields</span>
+        </div>
+
+        {% include "main_app/form_template.html" with messages=messages form=form button_text="Add Academic Admin" %}
+    </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    function validateEmail(email) {
+        const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(String(email).toLowerCase());
+    }
+    $(document).ready(function(){
+        $("#id_email").keyup(function(){
+            var email = $(this).val();
+            if (validateEmail(email)){
+                $.ajax({
+                    url: "{% url 'check_email_availability' %}",
+                    type: 'POST',
+                    data:{email:email}
+                }).done(function(response){
+                    $(".email_error").remove();
+                    if (response == "True"){
+                        $("<span class='invalid email_error'>Email Address Already Exists</span>").insertAfter("#id_email");
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock custom_js %}

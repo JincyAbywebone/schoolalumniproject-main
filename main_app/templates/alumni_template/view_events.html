@@ -1,0 +1,79 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ page_title }}</h3>
+                    </div>
+
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Sl.No</th>
+                                    <th>Event Name</th>
+                                    <th>Event Date</th>
+                                    <th>Event Type</th>
+                                    <th>Event Venue</th>
+                                    <th>Event Status</th>
+                                    <th>About Event</th>
+                                    <th>Department</th>
+                                    <th>Image</th>
+                                    <th>Posted On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in info %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ event.event_name }}</td>
+                                        <td>{{ event.event_date }}</td>
+                                        <td>{{ event.event_type }}</td>
+                                        <td>{{ event.event_venue }}</td>
+                                        <td>
+                                            {# Optional detail: color code status! #}
+                                            {% if event.event_status == 'Scheduled' %}
+                                                <span class="badge badge-success">{{ event.event_status }}</span>
+                                            {% elif event.event_status == 'Postponed' %}
+                                                <span class="badge badge-warning">{{ event.event_status }}</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">{{ event.event_status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td style="max-width: 300px; white-space: normal; word-wrap: break-word;">{{ event.description }}</td>
+                                        <td>{{ event.department }}</td>
+                                        <td>
+                                            {% if event.image %}
+                                                {# Use .url here assuming it's a standard Django ImageField setup #}
+                                                <img class="img img-fluid mb-2" height="100" width="100" src="{{ event.image.url }}" alt="">
+                                            {% else %}
+                                                No Image
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ event.created_at|date:"Y-m-d" }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="10" class="text-center">No upcoming events available.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

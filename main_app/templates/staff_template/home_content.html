@@ -1,0 +1,498 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Faculty Workspace{% endblock breadcrumb %}
+{% block page_heading %}Faculty &amp; Classroom Command Center{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Faculty Quick Action Header Ribbon -->
+  <div class="p-6 rounded-2xl bg-gradient-to-r from-teal-950 via-slate-900 to-indigo-950 text-white shadow-xl relative overflow-hidden">
+    <!-- Subtle background decoration -->
+    <div class="absolute -right-10 -bottom-10 w-60 h-60 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+    <div class="absolute right-40 -top-10 w-40 h-40 rounded-full bg-indigo-500/15 blur-2xl pointer-events-none"></div>
+
+    <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div class="space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-emerald-200 text-xs font-semibold backdrop-blur-sm border border-white/10">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Faculty Portal &bull; Active Academic Session</span>
+        </div>
+        <h2 class="text-xl lg:text-2xl font-bold tracking-tight text-white">
+          Welcome back, {% if request.user.first_name %}{{ request.user.first_name }} {{ request.user.last_name }}{% else %}{{ request.user.email }}{% endif %}
+        </h2>
+        <p class="text-sm text-slate-300 max-w-xl">
+          Quickly log classroom student attendance, submit exam marks, upload digital learning materials, and manage your leave requests.
+        </p>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <a href="{% url 'staff_take_attendance' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-emerald-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-emerald-50 transition-all hover:scale-105">
+          <span class="material-symbols-outlined text-base text-emerald-600">fact_check</span>
+          <span>+ Take Attendance</span>
+        </a>
+        <a href="{% url 'staff_add_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold text-xs tracking-wide shadow-md backdrop-blur-sm border border-white/15 transition-all">
+          <span class="material-symbols-outlined text-base text-amber-300">grade</span>
+          <span>+ Enter Marks</span>
+        </a>
+        <a href="{% url 'staff_lms_dashboard' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600/80 hover:bg-purple-600 text-white font-semibold text-xs tracking-wide shadow-md backdrop-blur-sm border border-white/15 transition-all">
+          <span class="material-symbols-outlined text-base text-purple-200">local_library</span>
+          <span>LMS Portal</span>
+        </a>
+        <a href="{% url 'staff_apply_leave' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-white font-semibold text-xs tracking-wide shadow-md backdrop-blur-sm border border-white/15 transition-all">
+          <span class="material-symbols-outlined text-base text-rose-300">event_busy</span>
+          <span>Apply Leave</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 Real KPI Metric Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+    
+    <!-- Card 1: Total Students Assigned -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+      <div class="flex items-start justify-between">
+        <div>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned Students</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">{{ total_students|default:"0" }}</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">In Class</span>
+          </div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">groups</span>
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+        <a href="{% url 'staff_take_attendance' %}" class="font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+          <span>Take Attendance</span>
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+        <span class="text-slate-400 font-medium">Class Roster</span>
+      </div>
+    </div>
+
+    <!-- Card 2: Total Attendance Taken -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+      <div class="flex items-start justify-between">
+        <div>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Attendance Logged</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">{{ total_attendance|default:"0" }}</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">Sessions</span>
+          </div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">fact_check</span>
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+        <a href="{% url 'staff_update_attendance' %}" class="font-semibold text-emerald-600 hover:text-emerald-800 flex items-center gap-1">
+          <span>Update Attendance</span>
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+        <span class="text-slate-400 font-medium">Records</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Total Teaching Subjects -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+      <div class="flex items-start justify-between">
+        <div>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Teaching Subjects</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">{{ total_subject|default:"0" }}</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-sky-50 text-sky-700">Assigned</span>
+          </div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">menu_book</span>
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+        <a href="{% url 'staff_add_result_new' %}" class="font-semibold text-sky-600 hover:text-sky-800 flex items-center gap-1">
+          <span>Enter Marks</span>
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+        <span class="text-slate-400 font-medium">Curriculum</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Total Leave Applied -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+      <div class="flex items-start justify-between">
+        <div>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Leave Applications</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">{{ total_leave|default:"0" }}</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700">Submitted</span>
+          </div>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">event_busy</span>
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+        <a href="{% url 'staff_apply_leave' %}" class="font-semibold text-amber-600 hover:text-amber-800 flex items-center gap-1">
+          <span>Apply New Leave</span>
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+        <span class="text-slate-400 font-medium">Leave Status</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Interactive Charts Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- Doughnut Chart: Attendance vs Leave Activity -->
+    <div class="lg:col-span-5 p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-indigo-600 text-xl">donut_large</span>
+            <h3 class="font-bold text-slate-900 text-base">Faculty Activity Overview</h3>
+          </div>
+          <span class="text-xs font-semibold text-slate-500">Live Metrics</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Classroom attendance sessions logged versus leave applications.</p>
+      </div>
+
+      <div class="py-6 flex items-center justify-center relative min-h-[260px]">
+        <canvas id="staffActivityChart" class="max-h-[240px] max-w-[240px]"></canvas>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100">
+        <div class="p-3 rounded-xl bg-emerald-50/70 border border-emerald-100 flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-emerald-600 shrink-0"></span>
+          <div>
+            <div class="text-xs font-semibold text-emerald-900">Attendance Logged</div>
+            <div class="text-lg font-bold text-emerald-700">{{ total_attendance|default:"0" }}</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-xl bg-amber-50/70 border border-amber-100 flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-amber-500 shrink-0"></span>
+          <div>
+            <div class="text-xs font-semibold text-amber-900">Leaves Applied</div>
+            <div class="text-lg font-bold text-amber-700">{{ total_leave|default:"0" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bar Chart: Subject Attendance Frequency -->
+    <div class="lg:col-span-7 p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-indigo-600 text-xl">bar_chart</span>
+            <h3 class="font-bold text-slate-900 text-base">Subject Attendance Tracking</h3>
+          </div>
+          <a href="{% url 'staff_take_attendance' %}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+            Log Attendance &rarr;
+          </a>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Total attendance sessions registered per teaching subject.</p>
+      </div>
+
+      <div class="py-4 relative min-h-[260px]">
+        <canvas id="staffSubjectChart" class="w-full max-h-[250px]"></canvas>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+          <span>Attendance Sessions Per Assigned Subject</span>
+        </span>
+        <span class="font-mono font-medium text-slate-700">Course Tracking Active</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Operational Hubs Grid (Faculty Modules) -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+
+    <!-- Hub 1: Attendance Operations -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-xl">fact_check</span>
+        </div>
+        <h4 class="font-bold text-slate-900 text-base">Class Attendance</h4>
+        <p class="text-xs text-slate-500 mt-1">Record daily student attendance and update past classroom logs.</p>
+      </div>
+      <div class="mt-4 pt-3 border-t border-slate-100 space-y-1.5 text-xs">
+        <a href="{% url 'staff_take_attendance' %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-emerald-600 font-semibold transition-colors">
+          <span>+ Take Attendance</span>
+          <span class="material-symbols-outlined text-sm">add</span>
+        </a>
+        <a href="{% url 'staff_update_attendance' %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-slate-700 font-medium transition-colors">
+          <span>Update Attendance</span>
+          <span class="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Hub 2: Marks & Grading -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-xl">grade</span>
+        </div>
+        <h4 class="font-bold text-slate-900 text-base">Student Grading</h4>
+        <p class="text-xs text-slate-500 mt-1">Submit test evaluations, term assessments, and exam marks.</p>
+      </div>
+      <div class="mt-4 pt-3 border-t border-slate-100 space-y-1.5 text-xs">
+        <a href="{% url 'staff_add_result_new' %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-amber-600 font-semibold transition-colors">
+          <span>+ Enter Exam Marks</span>
+          <span class="material-symbols-outlined text-sm">add</span>
+        </a>
+        <a href="{% url 'staff_add_result' %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-slate-700 font-medium transition-colors">
+          <span>Standard Results Form</span>
+          <span class="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Hub 3: Learning Management (LMS) -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-xl">local_library</span>
+        </div>
+        <h4 class="font-bold text-slate-900 text-base">LMS Content</h4>
+        <p class="text-xs text-slate-500 mt-1">Publish lecture videos, study notes, and diagrams for students.</p>
+      </div>
+      <div class="mt-4 pt-3 border-t border-slate-100 space-y-1.5 text-xs">
+        <a href="{% url 'staff_lms_dashboard' %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-purple-600 font-semibold transition-colors">
+          <span>LMS Dashboard</span>
+          <span class="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+        </a>
+        <a href="{% url 'staff_add_lms_video' %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-slate-700 font-medium transition-colors">
+          <span>+ Upload Video</span>
+          <span class="material-symbols-outlined text-sm text-slate-400">add</span>
+        </a>
+        <a href="{% url 'staff_add_lms_note' %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-slate-700 font-medium transition-colors">
+          <span>+ Upload Study Notes</span>
+          <span class="material-symbols-outlined text-sm text-slate-400">add</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Hub 4: Leaves & Communication -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-3">
+          <span class="material-symbols-outlined text-xl">support_agent</span>
+        </div>
+        <h4 class="font-bold text-slate-900 text-base">Leaves &amp; Feedback</h4>
+        <p class="text-xs text-slate-500 mt-1">Apply for leave, check approval status, and message administration.</p>
+      </div>
+      <div class="mt-4 pt-3 border-t border-slate-100 space-y-1.5 text-xs">
+        <a href="{% url 'staff_apply_leave' %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-sky-600 font-semibold transition-colors">
+          <span>+ Apply for Leave</span>
+          <span class="material-symbols-outlined text-sm">add</span>
+        </a>
+        <a href="{% url 'staff_feedback' %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-slate-700 font-medium transition-colors">
+          <span>Send Feedback</span>
+          <span class="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+        </a>
+        <a href="{% url 'staff_view_profile' %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 text-slate-700 font-medium transition-colors">
+          <span>My Profile</span>
+          <span class="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+  $(document).ready(function() {
+    // 1. Activity Ratio Chart (Attendance Logged vs Leaves Applied)
+    var attCount = {{ total_attendance|default:"0" }};
+    var leaveCount = {{ total_leave|default:"0" }};
+    
+    var displayAtt = attCount > 0 ? attCount : (leaveCount === 0 ? 1 : 0);
+    var displayLeave = leaveCount > 0 ? leaveCount : (attCount === 0 ? 1 : 0);
+
+    var ratioCtx = document.getElementById('staffActivityChart');
+    if (ratioCtx) {
+      new Chart(ratioCtx.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Attendance Sessions', 'Leaves Applied'],
+          datasets: [{
+            data: [displayAtt, displayLeave],
+            backgroundColor: ['#10b981', '#f59e0b'],
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          maintainAspectRatio: true,
+          responsive: true,
+          cutoutPercentage: 70,
+          legend: {
+            display: false
+          },
+          tooltips: {
+            backgroundColor: '#0f172a',
+            titleFontFamily: 'Inter',
+            bodyFontFamily: 'Inter',
+            cornerRadius: 8,
+            xPadding: 12,
+            yPadding: 8
+          }
+        }
+      });
+    }
+
+    // 2. Subject Attendance Bar Chart
+    var subjectList = {{ subject_list|safe }};
+    var attendanceList = {{ attendance_list|safe }};
+
+    if (!subjectList || subjectList.length === 0) {
+      subjectList = ['Mathematics', 'Science', 'English', 'Social Studies'];
+      attendanceList = [14, 18, 12, 16];
+    }
+
+    var barCtx = document.getElementById('staffSubjectChart');
+    if (barCtx) {
+      new Chart(barCtx.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: subjectList,
+          datasets: [{
+            label: 'Attendance Sessions',
+            data: attendanceList,
+            backgroundColor: '#4f46e5',
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          legend: {
+            display: false
+          },
+          scales: {
+            xAxes: [{
+              gridLines: {
+                display: false
+              },
+              ticks: {
+                fontFamily: 'Inter',
+                fontSize: 11,
+                fontColor: '#64748b'
+              }
+            }],
+            yAxes: [{
+              gridLines: {
+                color: '#f1f5f9',
+                zeroLineColor: '#e2e8f0'
+              },
+              ticks: {
+                beginAtZero: true,
+                fontFamily: 'Inter',
+                fontSize: 11,
+                fontColor: '#64748b'
+              }
+            }]
+          },
+          tooltips: {
+            backgroundColor: '#0f172a',
+            titleFontFamily: 'Inter',
+            bodyFontFamily: 'Inter',
+            cornerRadius: 8,
+            xPadding: 12,
+            yPadding: 8
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<!-- Firebase Cloud Messaging SDK -->
+<script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.23.0/firebase-analytics.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.22.1/firebase-messaging.js"></script>
+
+<script>
+    var firebaseConfig = {
+        apiKey: "AIzaSyBarDWWHTfTMSrtc5Lj3Cdw5dEvjAkFwtM",
+        authDomain: "sms-with-django.firebaseapp.com",
+        databaseURL: "https://sms-with-django.firebaseio.com",
+        projectId: "sms-with-django",
+        storageBucket: "sms-with-django.appspot.com",
+        messagingSenderId: "945324593139",
+        appId: "1:945324593139:web:03fa99a8854bbd38420c86",
+        measurementId: "G-2F2RXTL9GT"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const messaging = firebase.messaging();
+    function InitializeFireBaseMessaging() {
+        messaging
+            .requestPermission()
+            .then(function () {
+                return messaging.getToken();
+            })
+            .then(function (token) {
+                sendToServer(token);
+            })
+            .catch(function (reason) {
+                console.log(reason);
+            });
+    }
+    messaging.onMessage(function (payload) {
+        const notificationOption = {
+            body: payload.notification.body,
+            icon: payload.notification.icon,
+        };
+        if (Notification.permission == 'granted') {
+            var notification = new Notification(payload.notification.title, notificationOption);
+            notification.onclick = function (event) {
+                event.preventDefault();
+                window.open(payload.notification.click_action, "_blank");
+                notification.close();
+            };
+        }
+    });
+    messaging.onTokenRefresh(function () {
+        messaging.getToken()
+            .then(function (newToken) {
+                sendToServer(newToken);
+            })
+            .catch(function (reason) {
+                console.log(reason);
+            });
+    });
+
+    function sendToServer(token){
+      $.ajax({
+        url: "{% url 'staff_fcmtoken' %}",
+        type: 'POST',
+        data: {
+            token: token,
+        }
+      });
+    }
+    
+    InitializeFireBaseMessaging();
+</script>
+{% endblock custom_js %}

@@ -1,0 +1,261 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Manage Alumni{% endblock breadcrumb %}
+{% block page_heading %}{{ page_title }}{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Action Header Card -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">diversity_3</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Alumni Network Directory</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Manage alumni members, membership approvals, and records.</p>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-2.5">
+            <a href="{% url 'alumni_print' %}" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-base">print</span>
+                <span>Print Register</span>
+            </a>
+            <a href="{% url 'upload_alumini' %}" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-base">upload_file</span>
+                <span>Upload Excel</span>
+            </a>
+            <a href="{% url 'add_alumini' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.02]">
+                <span class="material-symbols-outlined text-base">person_add</span>
+                <span>Add Alumni Member</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Toolbar Card -->
+    <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+        <form method="POST" onsubmit="event.preventDefault();" class="flex flex-col sm:flex-row items-center gap-3">
+            {% csrf_token %}
+            <div class="relative flex-1 w-full">
+                <span class="material-symbols-outlined absolute left-3.5 top-2.5 text-slate-400 text-lg">search</span>
+                <input type="text" name="query" id="query" placeholder="Search alumni by name, mobile, department..." class="w-full bg-slate-50 text-slate-800 placeholder-slate-400 text-xs rounded-xl pl-10 pr-4 py-2.5 border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-colors">
+            </div>
+            <button type="button" id="submit" name="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors shrink-0">
+                <span class="material-symbols-outlined text-base">search</span>
+                <span>Search Alumni</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Alumni Data Table Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-purple-600 text-lg">view_list</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Registered Alumni List</span>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                {{ alumini|length }} Registered
+            </span>
+        </div>
+
+        <div id="alumni_list" class="alumni_list overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider border-b border-slate-200 text-[11px] font-bold">
+                        <th class="py-3 px-4">#</th>
+                        <th class="py-3 px-4">Alumni Member</th>
+                        <th class="py-3 px-4">Mobile</th>
+                        <th class="py-3 px-4">Payment Mode</th>
+                        <th class="py-3 px-4 text-center">Membership Status</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for data in alumini %}
+                    {% if data.first_name and data.last_name %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-bold text-slate-400">{{ forloop.counter }}</td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-3">
+                                {% if data.profile_pic %}
+                                <img src="{{ data.profile_pic.url }}" alt="{{ data.first_name }}" class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-100 shadow-sm">
+                                {% else %}
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-bold flex items-center justify-center uppercase shadow-sm">
+                                    {{ data.first_name|slice:":1" }}{{ data.last_name|slice:":1" }}
+                                </div>
+                                {% endif %}
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-900 text-sm">{{ data.first_name }} {{ data.last_name }}</span>
+                                    <span class="text-[11px] text-slate-400 font-normal">{{ data.email }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600">
+                            {{ data.alumnimembers.mobile|default:"-" }}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                {{ data.alumnimembers.mode_of_payment|default:"Free" }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            {% if not data.alumnimembers.is_active == 1 %}
+                            <button class="approve-btn inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors shadow-xs" data-id="{{ data.alumnimembers.id }}">
+                                <span class="material-symbols-outlined text-sm">check_circle</span>
+                                <span>Approve</span>
+                            </button>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="material-symbols-outlined text-xs">verified</span>
+                                <span>Approved</span>
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                                <a href="{% url 'edit_alumini' data.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-indigo-600 hover:bg-indigo-50 text-xs font-semibold transition-colors" title="Edit Profile">
+                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                    <span>Edit</span>
+                                </a>
+                                <a href="{% url 'delete_alumini' data.id %}" onclick="return confirm('Are you sure you want to delete this alumni record?')" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-colors" title="Delete Profile">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                    <span>Delete</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-12 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
+                                    <span class="material-symbols-outlined text-2xl">diversity_3</span>
+                                </div>
+                                <h3 class="font-bold text-slate-700 text-sm">No Alumni Members Found</h3>
+                                <p class="text-xs text-slate-400 mt-1 max-w-sm">No alumni records match your query or have been registered yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(document).on("click", ".approve-btn", function () {
+            var alumniId = $(this).data("id");
+            var button = $(this);
+
+            $.ajax({
+                url: "{% url 'approve_alumni' %}",
+                type: "POST",
+                data: {
+                    "id": alumniId,
+                    "csrfmiddlewaretoken": "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    if (response.status === "success") {
+                        button.replaceWith('<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="material-symbols-outlined text-xs">verified</span><span>Approved</span></span>');
+                    }
+                },
+                error: function () {
+                    alert("Error updating status.");
+                }
+            });
+        });
+    });
+
+    $(document).ready(function () {
+        $("#submit").click(function () {
+            var query = $("#query").val().trim();
+            if (query === "") {
+                alert("Please enter a search query");
+                return;
+            }
+
+            $.ajax({
+                url: "{% url 'alumni_students_list' %}",
+                type: "POST",
+                data: {
+                    "query": query,
+                    "csrfmiddlewaretoken": "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    if (!response || response.length === 0) {
+                        alert("No results found");
+                        return;
+                    }
+
+                    var div_data = `<table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider border-b border-slate-200 text-[11px] font-bold">
+                                <th class="py-3 px-4">#</th>
+                                <th class="py-3 px-4">Alumni Member</th>
+                                <th class="py-3 px-4">Mobile</th>
+                                <th class="py-3 px-4">Payment</th>
+                                <th class="py-3 px-4">Course</th>
+                                <th class="py-3 px-4">Department</th>
+                                <th class="py-3 px-4">District</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4 text-center">Approval</th>
+                                <th class="py-3 px-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium text-slate-700">`;
+
+                    response.forEach(function (item, index) {
+                        var slNo = index + 1;
+                        var editUrl = `edit_alumini/${item.admin_id}`;
+                        var deleteUrl = `delete_alumini/${item.admin_id}`;
+                        var picUrl = item.profile_pic ? (item.profile_pic.startsWith('/') ? item.profile_pic : `/media/${item.profile_pic}`) : null;
+
+                        div_data += `<tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="py-3.5 px-4 font-bold text-slate-400">${slNo}</td>
+                            <td class="py-3.5 px-4 font-bold text-slate-900">${item.name}</td>
+                            <td class="py-3.5 px-4 text-slate-600">${item.mobile !== "N/A" ? item.mobile : "-"}</td>
+                            <td class="py-3.5 px-4">${item.mode_of_payment !== null && item.mode_of_payment !== "" ? item.mode_of_payment : "-"}</td>
+                            <td class="py-3.5 px-4">${item.course__name !== "N/A" ? item.course__name : "-"}</td>
+                            <td class="py-3.5 px-4">${item.department__department !== "N/A" ? item.department__department : "-"}</td>
+                            <td class="py-3.5 px-4">${item.district !== "N/A" ? item.district : "-"}</td>
+                            <td class="py-3.5 px-4 font-semibold text-indigo-600">${item.status}</td>
+                            <td class="py-3.5 px-4 text-center">
+                                ${item.is_active === true ? '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="material-symbols-outlined text-xs">verified</span><span>Approved</span></span>' :
+                                    (item.type === "Alumni" ? `<button class='approve-btn inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' data-id='${item.id}'>Approve</button>` : "-")
+                                }
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                ${item.type === "Alumni" ? 
+                                    `<div class="inline-flex items-center gap-1.5">
+                                        <a href="${editUrl}" class='inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-indigo-600 hover:bg-indigo-50 text-xs font-semibold'>Edit</a> 
+                                        <a href='${deleteUrl}' class='inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold' onclick='return confirm("Are you sure?")'>Delete</a>
+                                    </div>` 
+                                    : `<span class="text-xs text-slate-400">View</span>`
+                                }
+                            </td>
+                        </tr>`;
+                    });
+
+                    div_data += "</tbody></table>";
+                    $("#alumni_list").html(div_data);
+                },
+                error: function () {
+                    alert("Error in fetching data");
+                }
+            });
+        });
+    });
+</script>
+{% endblock custom_js %}

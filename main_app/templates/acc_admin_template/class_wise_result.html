@@ -1,0 +1,201 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Class-wise Results{% endblock breadcrumb %}
+{% block page_heading %}Class-wise Examination Evaluation{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Filter Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-indigo-600 text-xl">filter_alt</span>
+        <h3 class="card-title">Select Class &amp; Examination</h3>
+      </div>
+    </div>
+    <div class="card-body">
+      <form method="GET" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Course -->
+          <div class="form-group">
+            <label for="course">Class / Course &amp; Division</label>
+            <select name="course" id="course" required class="form-control">
+              <option value="">-- Select Course &amp; Division --</option>
+              {% for course in courses %}
+                <option value="{{ course.id }}" {% if course.id|stringformat:'s' == selected_course %}selected{% endif %}>
+                  {{ course.name }} - {{ course.division }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Term -->
+          <div class="form-group">
+            <label for="term">Academic Term</label>
+            <select id="term" class="form-control" name="term" onchange="fetchExams()" required>
+              <option value="">-- Select Term --</option>
+              {% for t in terms %}
+                <option value="{{ t }}" {% if t|stringformat:'s' == selected_term %}selected{% endif %}>
+                  {{ t }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Exam -->
+          <div class="form-group">
+            <label for="exam">Examination</label>
+            <select id="exam" name="exam" required class="form-control">
+              <option value="">-- Select Exam --</option>
+              {% for e in exams %}
+                <option value="{{ e.id }}" {% if e.id|stringformat:'s' == selected_exam %}selected{% endif %}>
+                  {{ e.exam_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Session -->
+          <div class="form-group">
+            <label for="session_select">Academic Session</label>
+            <select class="form-control" id="session_select" name="session_select">
+              {% if session %}
+                <option value="{{ session.id }}" selected>
+                  {{ session.start_year }} - {{ session.end_year }}
+                </option>
+              {% else %}
+                <option value="">No Active Session</option>
+              {% endif %}
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md transition-all">
+            <span class="material-symbols-outlined text-base">search</span>
+            <span>View Results</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Results Table Card -->
+  {% if student_subject_marks %}
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-emerald-600 text-xl">table_chart</span>
+          <h3 class="card-title">Class Examination Results</h3>
+        </div>
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700">
+          {{ student_subject_marks|length }} Students Evaluated
+        </span>
+      </div>
+    </div>
+    <div class="card-body overflow-x-auto p-0">
+      <table class="table table-bordered table-hover w-full mb-0 text-sm">
+        <thead class="bg-slate-50 text-slate-700">
+          <tr>
+            <th class="w-12 text-center">#</th>
+            <th>Student Name</th>
+            {% for subject in subjects %}
+              <th class="text-center">{{ subject }}</th>
+            {% endfor %}
+            <th class="text-center">Percentage</th>
+            <th class="text-center">Remark</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for student in student_subject_marks %}
+            <tr class="hover:bg-slate-50/80 transition-colors">
+              <td class="text-center font-mono text-slate-500">{{ forloop.counter }}</td>
+              <td class="font-semibold text-slate-800">{{ student.name }}</td>
+              {% for subject in subjects %}
+                <td class="text-center font-mono">
+                  {% if subject in student.marks %}
+                    <span class="px-2 py-0.5 rounded text-xs font-semibold {% if student.marks|get_item:subject >= 40 %}bg-slate-100 text-slate-800{% else %}bg-rose-50 text-rose-700{% endif %}">
+                      {{ student.marks|get_item:subject }}
+                    </span>
+                  {% else %}
+                    <span class="text-slate-300">-</span>
+                  {% endif %}
+                </td>
+              {% endfor %}
+              <td class="text-center font-mono font-bold text-slate-900">
+                {{ student.percentage }}%
+              </td>
+              <td class="text-center">
+                {% if student.percentage >= 90 %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Outstanding</span>
+                {% elif student.percentage >= 75 %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">Excellent</span>
+                {% elif student.percentage >= 60 %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">Good</span>
+                {% elif student.percentage >= 40 %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Average</span>
+                {% elif student.percentage > 0 %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800">Below Average</span>
+                {% else %}
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600">Absent</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% elif selected_course and selected_exam %}
+  <div class="card p-8 text-center">
+    <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+      <span class="material-symbols-outlined text-2xl">search_off</span>
+    </div>
+    <h4 class="font-bold text-slate-700">No records found</h4>
+    <p class="text-xs text-slate-500 mt-1">No examination records match the selected course, term, and exam.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+function fetchExams() {
+  const term = document.getElementById("term").value;
+  $('#exam').html('<option value="">Select Exam</option>');
+
+  if (!term) {
+    return;
+  }
+
+  $.ajax({
+    url: '{% url "get_exams_by_term" %}',
+    type: 'POST',
+    data: {
+      term: term,
+      csrfmiddlewaretoken: '{{ csrf_token }}'
+    },
+    success: function (response) {
+      if (response.length < 1) {
+        alert('No exam available for this Term');
+        return;
+      }
+      let options = '<option value="">Select Exam</option>';
+      response.forEach(function (exam) {
+        options += `<option value="${exam.id}">${exam.exam_name}</option>`;
+      });
+      $('#exam').html(options);
+    },
+    error: function () {
+      alert('Error loading exams');
+    }
+  });
+}
+</script>
+{% endblock custom_js %}

@@ -1,0 +1,393 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}
+{{ page_title }}
+{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+
+<div class="container-fluid">
+
+<div class="row">
+
+<div class="col-md-12">
+
+<!-- Student Details -->
+
+<div class="card card-primary card-outline">
+
+<div class="card-header">
+
+<h3 class="card-title">
+
+<i class="fas fa-user-graduate mr-2"></i>
+
+Student Details
+
+</h3>
+
+<div class="card-tools">
+
+<a href="{% url 'print_transfer_certificate' tc.id %}"
+target="_blank"
+class="btn btn-success btn-sm">
+
+<i class="fas fa-print"></i>
+
+Print TC
+
+</a>
+
+<a href="{% url 'reprint_transfer_certificate' tc.id %}"
+target="_blank"
+class="btn btn-warning btn-sm">
+
+<i class="fas fa-copy"></i>
+
+Duplicate
+
+</a>
+
+<a href="{% url 'transfer_certificate_list' %}"
+class="btn btn-secondary btn-sm">
+
+<i class="fas fa-arrow-left"></i>
+
+Back
+
+</a>
+
+</div>
+
+</div>
+
+<div class="card-body">
+
+<div class="row">
+
+<div class="col-md-3">
+
+<strong>Admission No.</strong>
+
+<br>
+
+{{ tc.student.admission_number }}
+
+</div>
+
+<div class="col-md-3">
+
+<strong>Student Name</strong>
+
+<br>
+
+{{ tc.student.admin.first_name }}
+
+{{ tc.student.admin.last_name }}
+
+</div>
+
+<div class="col-md-3">
+
+<strong>Class</strong>
+
+<br>
+
+{{ tc.student.course }}
+
+</div>
+
+<div class="col-md-3">
+
+<strong>Academic Session</strong>
+
+<br>
+
+{{ tc.student.session }}
+
+</div>
+
+</div>
+
+<hr>
+
+<div class="row">
+
+<div class="col-md-4">
+
+<strong>Father / Guardian</strong>
+
+<br>
+
+{{ tc.student.parent_name }}
+
+</div>
+
+<div class="col-md-4">
+
+<strong>Mother</strong>
+
+<br>
+
+{{ tc.student.mother_name }}
+
+</div>
+
+<div class="col-md-4">
+
+<strong>Date of Birth</strong>
+
+<br>
+
+{{ tc.student.admin.date_of_birth }}
+
+</div>
+
+</div>
+
+<hr>
+
+<div class="row">
+
+<div class="col-md-4">
+
+<strong>Religion</strong>
+
+<br>
+
+{{ tc.student.religion }}
+
+</div>
+
+<div class="col-md-4">
+
+<strong>Caste</strong>
+
+<br>
+
+{{ tc.student.caste }}
+
+</div>
+
+<div class="col-md-4">
+
+<strong>Blood Group</strong>
+
+<br>
+
+{{ tc.student.blood_group }}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- Transfer Certificate Details -->
+
+<div class="card card-success">
+
+<div class="card-header">
+
+<h3 class="card-title">
+
+Transfer Certificate Details
+
+</h3>
+
+</div>
+
+<div class="card-body">
+
+<div class="row">
+
+<div class="col-md-3">
+
+<strong>TC Number</strong>
+
+<br>
+
+{{ tc.tc_number }}
+
+</div>
+
+<div class="col-md-3">
+
+<strong>Issue Date</strong>
+
+<br>
+
+{{ tc.issue_date }}
+
+</div>
+
+<div class="col-md-3">
+
+<strong>Leaving Date</strong>
+
+<br>
+
+{{ tc.leaving_date }}
+
+</div>
+
+<div class="col-md-3">
+
+<strong>Last Attended</strong>
+
+<br>
+
+{{ tc.last_attended_date }}
+
+</div>
+
+</div>
+
+<hr>
+
+<div class="row">
+
+<div class="col-md-4">
+
+<strong>Conduct</strong>
+
+<br>
+
+<span class="badge badge-success">
+
+{{ tc.conduct }}
+
+</span>
+
+</div>
+
+<div class="col-md-4">
+
+<strong>Qualified for Promotion</strong>
+
+<br>
+
+{% if tc.qualified_for_promotion %}
+
+<span class="badge badge-primary">
+
+YES
+
+</span>
+
+{% else %}
+
+<span class="badge badge-danger">
+
+NO
+
+</span>
+
+{% endif %}
+
+</div>
+
+<div class="col-md-4">
+
+<strong>Status</strong>
+
+<br>
+
+{% if tc.cancelled %}
+
+<span class="badge badge-danger">
+
+Cancelled
+
+</span>
+
+{% else %}
+
+<span class="badge badge-success">
+
+Active
+
+</span>
+
+{% endif %}
+
+</div>
+
+</div>
+
+<hr>
+
+<div class="row">
+
+<div class="col-md-6">
+
+<strong>Reason</strong>
+
+<div class="border rounded p-2 bg-light">
+
+{{ tc.reason|linebreaks }}
+
+</div>
+
+</div>
+
+<div class="col-md-6">
+
+<strong>Remarks</strong>
+
+<div class="border rounded p-2 bg-light">
+
+{{ tc.remarks|default:"--"|linebreaks }}
+
+</div>
+
+</div>
+
+</div>
+
+<hr>
+
+<div class="row">
+
+<div class="col-md-6">
+
+<strong>Issued By</strong>
+
+<br>
+
+{{ tc.issued_by.first_name }}
+
+{{ tc.issued_by.last_name }}
+
+</div>
+
+<div class="col-md-6">
+
+<strong>Created On</strong>
+
+<br>
+
+{{ tc.created_at }}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+{% endblock %}

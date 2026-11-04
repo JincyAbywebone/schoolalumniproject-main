@@ -1,0 +1,130 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Manage Career Guidance{% endblock breadcrumb %}
+{% block page_heading %}{{ page_title }}{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Action Bar Card -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">work</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Career Guidance Directory</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Manage career counselling seminars, skill workshops, and orientation sessions.</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'add_careerguidanceprogrammes' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.02]">
+                <span class="material-symbols-outlined text-base">post_add</span>
+                <span>Create New Programme</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Programmes Table Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-blue-600 text-lg">event_note</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Scheduled Programmes</span>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                {{ programme|length }} Total Programmes
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider border-b border-slate-200 text-[11px] font-bold">
+                        <th class="py-3 px-4">#</th>
+                        <th class="py-3 px-4">Programme &amp; Banner</th>
+                        <th class="py-3 px-4">Date &amp; Venue</th>
+                        <th class="py-3 px-4">Type &amp; Department</th>
+                        <th class="py-3 px-4 text-center">Status</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for programmes in programme %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-bold text-slate-400">{{ forloop.counter }}</td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-3">
+                                {% if programmes.image %}
+                                <img src="{{ programmes.image.url }}" alt="{{ programmes.programme_name }}" class="w-12 h-12 rounded-xl object-cover ring-1 ring-slate-200 shadow-xs shrink-0">
+                                {% else %}
+                                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                                    <span class="material-symbols-outlined text-xl">work</span>
+                                </div>
+                                {% endif %}
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-900 text-sm">{{ programmes.programme_name }}</span>
+                                    <span class="text-[11px] text-slate-400 font-normal truncate max-w-xs">{{ programmes.description|default:"" }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-slate-800 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs text-slate-400">calendar_today</span>
+                                    {{ programmes.programme_date }}
+                                </span>
+                                <span class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                    <span class="material-symbols-outlined text-xs text-slate-400">location_on</span>
+                                    {{ programmes.programme_venue }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex flex-col gap-1">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 w-fit">
+                                    {{ programmes.programme_type }}
+                                </span>
+                                <span class="text-[11px] text-slate-500">{{ programmes.department }}</span>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold {% if programmes.programme_status == 'Completed' %}bg-slate-100 text-slate-600 border border-slate-200{% elif programmes.programme_status == 'Upcoming' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
+                                {{ programmes.programme_status }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                                <a href="{% url 'edit_careerguidance_programme' programmes.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-indigo-600 hover:bg-indigo-50 text-xs font-semibold transition-colors" title="Edit Programme">
+                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                    <span>Edit</span>
+                                </a>
+                                <a href="{% url 'delete_careerguidance_programme' programmes.id %}" onclick="return confirm('Are you sure you want to delete this programme?')" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-colors" title="Delete Programme">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                    <span>Delete</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-12 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
+                                    <span class="material-symbols-outlined text-2xl">work</span>
+                                </div>
+                                <h3 class="font-bold text-slate-700 text-sm">No Programmes Found</h3>
+                                <p class="text-xs text-slate-400 mt-1 max-w-sm">No career guidance programmes have been scheduled yet. Click "Create New Programme" to add one.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock content %}

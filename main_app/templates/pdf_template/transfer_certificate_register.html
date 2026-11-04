@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<style>
+
+@page{
+    size:A4 landscape;
+    margin:15mm;
+}
+
+body{
+    font-family:Arial,sans-serif;
+    font-size:11px;
+    color:#000;
+}
+
+h2{
+    text-align:center;
+    margin-bottom:5px;
+}
+
+h4{
+    text-align:center;
+    margin-top:0;
+    margin-bottom:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+
+    border:1px solid #000;
+
+    padding:6px;
+
+    text-align:center;
+
+}
+
+th{
+
+    background:#dddddd;
+
+}
+
+.footer{
+
+    margin-top:20px;
+
+    text-align:right;
+
+    font-size:12px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>
+
+{{ school.name }}
+
+</h2>
+
+<h4>
+
+TRANSFER CERTIFICATE REGISTER
+
+</h4>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th width="5%">Sl.No</th>
+
+<th width="12%">TC Number</th>
+
+<th width="10%">Admission No</th>
+
+<th width="20%">Student Name</th>
+
+<th width="12%">Class</th>
+
+<th width="10%">Issue Date</th>
+
+<th width="10%">Leaving Date</th>
+
+<th width="15%">Reason</th>
+
+<th width="6%">TC Status</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for tc in tcs %}
+
+<tr>
+
+<td>
+
+{{ forloop.counter }}
+
+</td>
+
+<td>
+
+{{ tc.tc_number }}
+
+</td>
+
+<td>
+
+{{ tc.student.admission_number }}
+
+</td>
+
+<td style="text-align:left">
+
+{{ tc.student.admin.first_name }}
+{{ tc.student.admin.last_name }}
+
+</td>
+
+<td>
+
+{{ tc.student.course }}
+
+</td>
+
+<td>
+
+{{ tc.issue_date|date:"d-m-Y" }}
+
+</td>
+
+<td>
+
+{{ tc.leaving_date|date:"d-m-Y" }}
+
+</td>
+
+<td style="text-align:left">
+
+{{ tc.reason }}
+
+</td>
+
+<td>
+
+{% if tc.cancelled %}
+
+Cancelled
+
+{% else %}
+
+Issued
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="9">
+
+No Transfer Certificates Issued
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+<br>
+
+<table style="border:none;">
+
+<tr style="border:none;">
+
+<td style="border:none;text-align:left;">
+
+Total Certificates Issued :
+
+<b>
+
+{{ tcs|length }}
+
+</b>
+
+</td>
+
+<td style="border:none;text-align:right;">
+
+Generated On :
+
+{{ today|date:"d-m-Y H:i" }}
+
+</td>
+
+</tr>
+
+</table>
+
+<div class="footer">
+
+__________________________
+
+<br>
+
+Principal
+
+</div>
+
+</body>
+
+</html>

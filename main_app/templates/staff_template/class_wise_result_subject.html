@@ -1,0 +1,79 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center text-primary mb-4"><b>Class Result(Subject-Wise)</b></h2>
+
+    <form method="GET" class="mb-4">
+        <div class="row">
+            <!-- Course Dropdown -->
+            <div class="col-md-5">
+                <select name="course" class="form-control" required onchange="this.form.submit()">
+                    <option value="">-- Select Course & Division --</option>
+                    {% for course in courses %}
+                        <option value="{{ course.id }}" {% if course.id|stringformat:'s' == selected_course_id %}selected{% endif %}>
+                            {{ course.name }} - {{ course.division }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Subject Dropdown -->
+            <div class="col-md-5">
+                <select name="subject" class="form-control" {% if not subjects %}disabled{% endif %} required>
+                    <option value="">-- Select Subject --</option>
+                    {% for subj in subjects %}
+                        <option value="{{ subj.id }}" {% if subj.id|stringformat:'s' == selected_subject_id %}selected{% endif %}>
+                            {{ subj.subject.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">View Results</button>
+            </div>
+        </div>
+    </form>
+
+    {% if selected_course_id and not subjects %}
+        <div class="alert alert-info mt-3 text-center">No subjects found for the selected course.</div>
+    {% endif %}
+
+    {% if selected_course_id and selected_subject_id %}
+        {% if results %}
+            <table class="table table-bordered table-striped mt-4">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Course</th>
+                        <th>Division</th>
+                        <th>Subject</th>
+                        <th>Test</th>
+                        <th>Exam</th>
+                        <th>Remarks</th>
+                        <th>Term</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                        <tr>
+                            <td>{{ result.student.admin.first_name }} {{ result.student.admin.last_name }}</td>
+                            <td>{{ result.student.course.name }}</td>
+                            <td>{{ result.student.course.division }}</td>
+                            <td>{{ result.subjectmaster.name }}</td>
+                            <td>{{ result.test }}</td>
+                            <td>{{ result.exam }}</td>
+                            <td>{{ result.remarks }}</td>
+                            <td>{{ result.term }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="alert alert-warning mt-4 text-center">No results found for selected course and subject.</div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

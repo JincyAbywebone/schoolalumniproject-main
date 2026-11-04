@@ -1,0 +1,257 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Staff &bull; Exams &bull; Edit Result{% endblock breadcrumb %}
+{% block page_heading %}Edit Student Examination Result{% endblock page_heading %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <!-- Top Action & Navigation -->
+  <div class="flex items-center justify-between pb-1 border-b border-slate-200">
+    <div class="flex items-center gap-2">
+      <a href="{% url 'staff_manage_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
+        <span class="material-symbols-outlined text-base">arrow_back</span>
+        <span>Back to Manage Results</span>
+      </a>
+    </div>
+
+    <div>
+      <span class="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+        Student: {{ result.student.admin.first_name }} {{ result.student.admin.last_name }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Messages Alert -->
+  {% if messages %}
+    <div class="space-y-2">
+      {% for message in messages %}
+        <div class="p-4 rounded-xl text-sm font-medium flex items-center gap-3 {% if message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200{% elif message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-sky-50 text-sky-700 border border-sky-200{% endif %}">
+          <span class="material-symbols-outlined text-xl">
+            {% if message.tags == 'error' %}error{% elif message.tags == 'success' %}check_circle{% else %}info{% endif %}
+          </span>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Edit Result Form Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">edit_document</span>
+        </div>
+        <div>
+          <h3 class="card-title">Modify Evaluation Record</h3>
+          <p class="text-xs text-slate-500 font-normal mt-0.5">Update marks and remarks for {{ result.student.admin.first_name }} {{ result.student.admin.last_name }} (Adm: {{ result.student.admission_number }})</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form method="POST" action="{% url 'update_student_result' result.id %}" class="space-y-5">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <!-- Course / Class -->
+          <div class="form-group mb-0">
+            <label for="course" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-indigo-500">school</span>
+              Class / Course &amp; Division
+            </label>
+            <select name="course" class="form-control" id="course" required>
+              <option value="">Select Course</option>
+              {% for course in courses %}
+                <option value="{{ course.id }}" {% if result.student.course.id == course.id %}selected{% endif %}>
+                  {{ course.name }} - {{ course.division }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Subject -->
+          <div class="form-group mb-0" id="subject_data_value">
+            <label for="subject_data_value1" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-sky-500">menu_book</span>
+              Subject
+            </label>
+            <select name="subject_data_value" class="form-control" id="subject_data_value1" required>
+              <option value="">Select Subject</option>
+              {% for subject in subjects %}
+                <option value="{{ subject.id }}" {% if result.subject.id == subject.id %}selected{% endif %}>
+                  {{ subject.subject.name }} ({{ subject.staff }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Exam -->
+          <div class="form-group mb-0">
+            <label for="exam_name" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-amber-500">assignment</span>
+              Examination
+            </label>
+            <select class="form-control" id="exam_name" name="exam_name" required>
+              <option value="">Select Exam</option>
+              {% for examname in examnames %}
+                <option value="{{ examname.id }}" {% if result.exam_type.id == examname.id %}selected{% endif %}>
+                  {{ examname.exam_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Term -->
+          <div class="form-group mb-0">
+            <label for="term_select" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-purple-500">calendar_month</span>
+              Academic Term
+            </label>
+            <select class="form-control" id="term_select" name="term_select" required>
+              <option value="{{ result.term }}">{{ result.term }}</option>
+            </select>
+          </div>
+
+          <!-- Session -->
+          <div class="form-group mb-0">
+            <label for="session_select" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-emerald-500">history_edu</span>
+              Academic Session
+            </label>
+            <select class="form-control" id="session_select" name="session_select">
+              {% if sessions %}
+                <option value="{{ sessions.id }}" selected>
+                  {{ sessions.start_year }} - {{ sessions.end_year }}
+                </option>
+              {% else %}
+                <option value="">No Active Session</option>
+              {% endif %}
+            </select>
+          </div>
+
+          <!-- Score Input -->
+          <div class="form-group mb-0">
+            <label for="mark_input" class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm text-indigo-500">grade</span>
+                Score Achieved <span class="text-rose-500">*</span>
+              </span>
+              <span class="text-slate-400 font-mono font-normal">Max: {{ max_marks|default:20 }}</span>
+            </label>
+            <input type="number" step="any" name="score" class="form-control font-bold text-slate-900"
+                   value="{{ result.test|default:result.exam|default:result.semester }}" 
+                   min="0" max="{{ max_marks|default:20 }}" required id="mark_input">
+          </div>
+
+          <!-- Remarks -->
+          <div class="form-group mb-0 md:col-span-2">
+            <label for="remarks_input" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-teal-500">comment</span>
+              Performance Remarks
+            </label>
+            <input type="text" name="remarks" id="remarks_input" class="form-control font-medium" 
+                   value="{{ result.remarks }}" data-auto="1">
+            <p class="text-xs text-slate-400 mt-1">Remarks will update automatically based on score, or you may enter custom remarks.</p>
+          </div>
+
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <a href="{% url 'staff_manage_bulk_result_new' %}" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-sm transition-all">
+            Cancel
+          </a>
+          <button type="submit" id="update_result" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 transition-all">
+            <span class="material-symbols-outlined text-base">check</span>
+            <span>Update Result</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function () {
+    const maxMarks = {{ max_marks|default:20 }};
+
+    function calculateRemarks(markVal) {
+        let mark = Number(markVal);
+        if (mark === 0) return "Absent";
+        if (mark < 0 || mark > maxMarks) return "Invalid Score";
+
+        let percentage = (mark / maxMarks) * 100;
+
+        if (percentage >= 95) return "Outstanding";
+        if (percentage >= 90) return "Excellent";
+        if (percentage >= 85) return "Very Good";
+        if (percentage >= 80) return "Good";
+        if (percentage >= 70) return "Satisfactory";
+        if (percentage >= 60) return "Average";
+        if (percentage >= 50) return "Below Average";
+        return "Need Improvement";
+    }
+
+    $(document).on('input', "#mark_input", function () {
+        let markVal = $(this).val();
+        let remarkInput = $("#remarks_input");
+        if (markVal.trim() !== "") {
+            remarkInput.val(calculateRemarks(markVal));
+        }
+    });
+
+    // Course selection -> Subject list
+    $("#course").change(function () {
+        let course = $(this).val();
+        if (!course) return;
+
+        $.ajax({
+            url: "{% url 'get_course_list' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                let subjects = typeof response === "string" ? JSON.parse(response) : response;
+                let subjectOptions = "<option value=''>Select Subject</option>";
+                subjects.forEach(subject => {
+                    subjectOptions += `<option value="${subject.id}">${subject.name} (${subject.staff})</option>`;
+                });
+                $("#subject_data_value1").html(subjectOptions);
+            }
+        });
+    });
+
+    // Exam name -> Term list
+    $("#exam_name").change(function () {
+        let exam_id = $(this).val();
+        if (!exam_id) return;
+
+        $.ajax({
+            url: "{% url 'get_term_list' %}",
+            type: 'POST',
+            data: {
+                exam_name: exam_id,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (terms) {
+                let options = "<option value=''>Select Term</option>";
+                terms.forEach(item => {
+                    options += `<option value="${item.name}">${item.name}</option>`;
+                });
+                $("#term_select").html(options);
+            }
+        });
+    });
+});
+</script>
+{% endblock custom_js %}

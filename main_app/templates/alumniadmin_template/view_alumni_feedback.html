@@ -1,0 +1,126 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}Feedback List{% endblock %}
+
+{% block content %}
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title">Alumni Feedback</h3>
+          </div>
+          <div class="card-body table-responsive">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Sl.No</th>
+                  <th>Alumni</th>
+                  <th>Feedback</th>
+                  <th>Reply</th>
+                  <th>View Reply</th>
+                  <th>Posted On</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for fb in feedbacks %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ fb.alumni.admin.first_name }} {{ fb.alumni.admin.last_name }}</td>
+                  <td>{{ fb.feedback }}</td>
+                  <td id="reply-col-{{ fb.id }}">
+                    {% if fb.reply %}
+                      <button class="btn btn-success btn-sm">Reply Given</button>
+                    {% else %}
+                      <form method="POST" class="reply-form" data-id="{{ fb.id }}">
+                        {% csrf_token %}
+                        <div class="input-group">
+                          <input type="text" name="reply" class="form-control" placeholder="Write reply..." required>
+                          <div class="input-group-append">
+                            <button class="btn btn-success btn-sm" type="submit">Send</button>
+                          </div>
+                        </div>
+                      </form>
+                    {% endif %}
+                  </td>
+                  <td id="view-reply-col-{{ fb.id }}">
+                    {% if fb.reply %}
+                      <button class="btn btn-info btn-sm view-reply-btn" data-reply="{{ fb.reply }}">View Reply</button>
+                    {% else %}
+                      <button class="btn btn-secondary btn-sm" disabled>No Reply</button>
+                    {% endif %}
+                  </td>
+                  <td>{{ fb.created_at }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal -->
+<div class="modal fade" id="replyModal" tabindex="-1" role="dialog" aria-labelledby="replyModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-info">
+        <h5 class="modal-title" id="replyModalLabel">Admin Reply</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-reply-text"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+$(document).ready(function () {
+  $('.reply-form').submit(function (e) {
+    e.preventDefault();
+    let form = $(this);
+    let feedbackId = form.data('id');
+    let replyText = form.find('input[name="reply"]').val();
+    let csrfToken = form.find('input[name="csrfmiddlewaretoken"]').val();
+    
+    $.ajax({
+      url: '/admin/reply_feedback/' + feedbackId + '/',  // ✅ Corrected URL
+      method: 'POST',
+      data: {
+        reply: replyText,
+        csrfmiddlewaretoken: csrfToken
+      },
+      success: function (response) {
+        if (response.status === 'success') {
+          $('#reply-col-' + feedbackId).html('<button class="btn btn-success btn-sm">Reply Given</button>');
+          let viewBtn = '<button class="btn btn-info btn-sm view-reply-btn" data-reply="' + response.reply + '">View Reply</button>';
+          $('#view-reply-col-' + feedbackId).html(viewBtn);
+        } else {
+          alert("Something went wrong!");
+        }
+      },
+      error: function () {
+        alert("Failed to send reply. Try again.");
+      }
+    });
+  });
+
+  // View reply in uppercase modal
+  $(document).on('click', '.view-reply-btn', function () {
+    let reply = $(this).data('reply');
+    $('#modal-reply-text').text(reply.toUpperCase());
+    $('#replyModal').modal('show');
+  });
+});
+</script>
+{% endblock %}

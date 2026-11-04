@@ -1,0 +1,109 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                    <form method="POST">
+                        {% csrf_token %}
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+
+                    
+                    
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <div class="card-body">
+
+                      
+                  {{ form }} 
+  <div class='col-md-6'>
+    <label>Exam Name</label>
+    <select class='form-control' id='exam_name' name='exam_name'>
+        <option value=''>----</option>
+        {% for exam in examname %}
+            <option value="{{ exam.id }}" {% if exam.id == selected_exam_id %}selected{% endif %}>
+                {{ exam.exam_name }}
+            </option>
+        {% endfor %}
+    </select>
+</div><input type="hidden" id="max_marks" value="0">
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                        <button type="submit" id='update_result' class="btn btn-primary btn-block">Update Result</button>
+               
+                    </div>
+                </form>
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block custom_js %}
+<script>
+
+function calculateRemark(score, maxMarks) {
+    if (isNaN(score) || isNaN(maxMarks)) return "Invalid Input";
+    if (score === 0) return "Absent";
+    if (score > maxMarks) return "Invalid Score";
+
+    let percent = (score / maxMarks) * 100;
+
+    if (percent >= 95) return "Outstanding";
+    else if (percent >= 90) return "Excellent";
+    else if (percent >= 85) return "Very Good";
+    else if (percent >= 80) return "Good";
+    else if (percent >= 70) return "Satisfactory";
+    else if (percent >= 60) return "Average";
+    else if (percent >= 50) return "Below Average";
+    else return "Need Improvement";
+}
+
+$(document).ready(function () {
+
+    $("#id_test").on("input", function () {
+        
+        let score = parseFloat($(this).val());
+        let exam_id = $("#exam_name").val();
+        if (!exam_id) {
+            $("#id_remarks").val("Please select exam");
+            return;
+        }
+
+        // Step 1: Fetch max_marks based on selected exam
+        $.ajax({
+            url: "{% url 'get_max_marks' %}",
+            data: { exam_id: exam_id },
+            success: function (data) {
+                let maxMarks = parseFloat(data.max_marks);
+                
+                if (isNaN(score) || isNaN(maxMarks)) {
+                    $("#id_remarks").val("Invalid Input");
+                    return;
+                }
+
+                // Step 2: Calculate and show remark
+                let remark = calculateRemark(score, maxMarks);
+                $("#id_remarks").val(remark);
+            },
+            error: function () {
+                $("#id_remarks").val("Error fetching max marks");
+            }
+        });
+    });
+});
+</script>
+
+{% endblock custom_js %}

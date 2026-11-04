@@ -1,0 +1,64 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Feedback Submission Form -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            {{ form.as_p }}
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Feedback History Table -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">My Recent Feedbacks</h3>
+                    </div>
+                    <div class="table-responsive p-2">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Feedback</th>
+                                    <th>Admin Reply</th>
+                                    <th>Posted On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for feedback in feedbacks %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>{{feedback.feedback}}</td>
+                                    <td>
+                                        {% if feedback.reply == "" %}
+                                            <span class="badge badge-warning">No Response Yet</span>
+                                        {% else %}
+                                            <span class="text-success">{{feedback.reply}}</span>
+                                        {% endif %}        
+                                    </td>  
+                                    <td>{{feedback.created_at|date:"Y-m-d H:i"}}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

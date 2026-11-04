@@ -1,0 +1,56 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ page_title }}</h3>
+                    </div>
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% include "main_app/form_template.html" with messages=messages form=form button_text="Add Alumini" %}   
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let checkbox = document.getElementById("id_same_as_permanent");
+        let permLocality = document.getElementById("id_permanent_locality");
+        let permDistrict = document.getElementById("id_permanent_district");
+        let permState = document.getElementById("id_permanent_state");
+        let currLocality = document.getElementById("id_current_locality");
+        let currDistrict = document.getElementById("id_current_district");
+        let currState = document.getElementById("id_current_state");
+
+        function toggleCurrentAddress() {
+            if (checkbox.checked) {
+                currLocality.value = permLocality.value;
+                currDistrict.value = permDistrict.value;
+                currState.value = permState.value;
+                currLocality.readOnly = true;
+                currDistrict.readOnly = true;
+                currState.readOnly = true;
+            } else {
+                currLocality.value = "";
+                currDistrict.value = "";
+                currState.value = "";
+                currLocality.readOnly = false;
+                currDistrict.readOnly = false;
+                currState.readOnly = false;
+            }
+        }
+
+        checkbox.addEventListener("change", toggleCurrentAddress);
+    });
+</script>
+{% endblock content %}

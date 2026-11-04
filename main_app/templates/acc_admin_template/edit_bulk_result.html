@@ -1,0 +1,221 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+
+   <form method="POST" action="{% url 'update_student_bulk_result' result.id %}">
+                    {% csrf_token %}
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">{{ page_title }}</h3>
+                        </div>
+
+                        <div class="card-body">
+
+    <!-- Course dropdown -->
+    <div class="form-group">
+        <label>Select Courseeee</label>
+        <select name="course" class="form-control" id="course">
+            <option value="">Select Course</option>
+            {% for course in courses %}
+                <option value="{{ course.id }}" {% if result.student.course.id == course.id %}selected{% endif %}>
+                    {{ course.name }} - {{ course.division }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Subject dropdown -->
+    <div class="form-group" id="subject_data_value">
+        <label>Select Subject</label>
+        <select name="subject_data_value" class="form-control" id="subject_data_value1">
+            <option value="">Select Subject</option>
+            {% for subject in subjects %}
+                <option value="{{ subject.id }}" {% if result.subject.id == subject.id %}selected{% endif %}>
+                    {{ subject.subject.name }} ({{ subject.staff}})
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Exam dropdown -->
+    <div class="form-group">
+        <label>Select Exam</label>
+        <select class="form-control" id="exam_name" name="exam_name">
+            <option value="">Select Exam</option>
+            {% for examname in examnames %}
+                <option value="{{ examname.id }}" {% if result.exam_type.id == examname.id %}selected{% endif %}>
+                    {{ examname.exam_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Term dropdown (static if needed) -->
+    <div class="form-group">
+        <label>Select Term</label>
+        <select class="form-control" id="term_select" name="term_select">
+            <option value="{{ result.term }}">{{ result.term }}</option>
+        </select>
+    </div>
+
+<div>
+      <label>Session</label>
+    <select class="form-control" id="session_select" name="session_select">
+        {% if session %}
+            <option value="{{ session.id }}" selected>
+                {{ session.start_year }} - {{ session.end_year }}
+            </option>
+        {% else %}
+            <option value="">No Active Session</option>
+        {% endif %}
+    </select>
+</div>
+
+
+
+    <!-- ✅ HERE: Dynamic score field -->
+ <div class="form-group">
+    <label>Enter Score</label>
+    {% with result.exam_type.exam_name|lower as etype %}
+        <input type="number" name="score" class="form-control"
+               value="{{ result.test|default:result.exam|default:result.semester }}" 
+               min="0" max="{{ max_marks }}" required id="mark_input">
+    {% endwith %}
+</div>
+
+    <!-- Remarks -->
+   <div class="form-group">
+        <label>Remarks</label>
+        <input type="text" name="remarks" class="form-control" value="{{ result.remarks }}" data-auto="1">
+    </div>
+
+</div> <div class="card-footer">
+                        <button type="submit" id='update_result' class="btn btn-primary btn-block">Update Results</button>
+               
+                    </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+{% block custom_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function () {
+
+    // Course selection → Subject list
+    $("#course").change(function () {
+        let course = $(this).val();
+        if (!course) {
+            alert("Please select a course");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_course_list' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                let subjects = JSON.parse(response);
+                let subjectOptions = "<option value=''>Select Subject</option>";
+                subjects.forEach(subject => {
+                    subjectOptions += `<option value="${subject.id}">${subject.name}</option>`;
+                });
+                $("#subject_data_value1").html(subjectOptions);
+            },
+            error: function () {
+                alert("Error fetching subjects");
+            }
+        });
+    });
+
+    // Exam name → Term list
+    $("#exam_name").change(function () {
+        let exam_id = $(this).val();
+        $("#term_select").html("<option value=''>----</option>");
+
+        if (!exam_id) {
+            alert("Please select an exam");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_term_list' %}",
+            type: 'POST',
+            data: {
+                exam_name: exam_id,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (terms) {
+                if (!terms.length) {
+                    alert("No terms available");
+                    return;
+                }
+                terms.forEach(item => {
+                    $("#term_select").append(`<option value="${item.name}">${item.name}</option>`);
+                });
+            },
+            error: function () {
+                alert("Error fetching terms");
+            }
+        });
+    });
+
+});
+
+ const maxMarks = {{ max_marks|default:20 }};
+
+function calculateRemarks(markVal) {
+    let mark = Number(markVal);
+    if (mark < 0 || mark > maxMarks) return "Invalid Score";
+
+    let percentage = (mark / maxMarks) * 100;
+
+   if (percentage >= 75) return "Distinction";
+    if (percentage >= 60) return "First Class";
+    if (percentage >= 50) return "Second Class";
+    if (percentage >= 35) return "Pass / Average";
+    return "Fail";
+}
+
+$(document).on('input', "#mark_input", function () {
+    let markVal = $(this).val();
+    let remarkInput = $("input[name='remarks']");
+    if (remarkInput.attr("data-auto") === "1") {
+        remarkInput.val(calculateRemarks(markVal));
+    }
+});
+
+
+
+
+// Initial auto-fill on page load
+$(document).ready(function () {
+    let container = $('form');
+    let testVal = container.find("input[name='test_score']").val();
+
+    let remarks = calculateRemarks(testVal, examVal, semesterVal);
+    let remarkInput = container.find("input[name='remarks']");
+    remarkInput.val(remarks).attr("data-auto", "1");
+});
+
+
+
+
+
+</script>
+{% endblock custom_js %}
+

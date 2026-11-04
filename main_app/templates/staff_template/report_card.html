@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Report Card</title>
+<style>
+  body { font-size: 12px; color: #333; }
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.header .left,
+.header .center,
+.header .right {
+  flex: 1;
+  text-align: center;
+}
+  .logo { width: 70px; height: 70px; object-fit: contain; }
+  .school-name { font-size: 22px; font-weight: bold; }
+  .school-meta { font-size: 11px; color:#555; }
+
+  .report-title { margin: 15px 0; padding: 10px; background:#f3f4f6; border-left: 4px solid #2563eb; font-weight:700; }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; margin-bottom:15px; }
+  .info-label { font-weight:bold; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #ccc; padding: 8px; }
+  th { background: #f9fafb; text-align: left; }
+  .right { text-align:right; }
+
+  .summary { margin-top: 12px; padding: 10px; background:#f9fafb; border:1px solid #ddd; border-radius:6px;}
+  .sign-row { display:flex; justify-content: space-between; margin-top: 40px; }
+  .sig { width: 40%; text-align: center; border-top: 1px solid #999; padding-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="header" >
+  <div style="display:flex; gap:55px; align-items:center;"  class="left">
+ {% if school_logo %}
+      <img src="{{ school_logo }}" alt="School Logo" style="height:80px;">
+    {% endif %}
+<div class="right">
+    <h2 class="school-name">{{ school.name }}</h2>
+    <p class="school-meta">{{ school.address }}, {{ school.city }} - {{ school.state }}</p>
+    <p class="school-meta">{{ school.country }} | Phone: {{ school.phone }} | {{ school.email }}</p>
+  </div>
+</div>
+</div>
+{% if student_photo %}
+    <img src="{{ student_photo }}"  style="height:70px; width:70px; object-fit:cover; border:1px solid #ccc; border-radius:6px;">
+  {% endif %}
+</div>
+<div class="report-title">Report Card ({{ exam_name }})</div>
+
+<div class="info-grid">
+  <div><span class="info-label">Student Name:</span> {{ student.admin.first_name }}.{{ student.admin.last_name }}</div>
+  <div><span class="info-label">Admission No:</span> {{ student.admission_number }}</div>
+  <div><span class="info-label">Class / Division:</span> {{ course.name }} - {{ course.division }}</div>
+  <div><span class="info-label">Date:</span> {{ report_date|date:"d M Y" }}</div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Subject</th>
+      <th class="right">Max Marks</th>
+      <th class="right">Marks Obtained</th>
+      <th>Grade</th>
+      <th>Remarks</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.subject }}</td>
+      <td class="right">{{ r.max }}</td>
+      <td class="right">{{ r.mark }}</td>
+      <td>{{ r.grade }}</td>
+      <td>{{ r.remark }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No results available.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="summary">
+  <b>Total:</b> {{ obtained_total }} / {{ max_total }} &nbsp; | &nbsp;
+  <b>Percentage:</b> {{ overall_pct }}%
+</div>
+
+<div class="sign-row">
+  <div class="sig">Class Teacher</div>
+  <div class="sig">Principal</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,257 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                {% if message %}
+    <div class="alert alert-success">
+        {{ message }}
+    </div>
+{% endif %}
+{% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+{% endif %}
+                <!-- general form elements -->
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <div class="card-body">
+                        <div class="card-body">
+  
+                        <div class="form-group">
+                            <label>Course</label>
+                            <select name="course1" class="form-control" id='course1'>
+                               <option value="">----</option>
+            {% for data in data_list %}
+            <option value="{{ data.id }}">{{ data.name }} - {{ data.division }}</option>
+            {% endfor %}
+        </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select name="subject" class="form-control" id='subject_data'>
+                              
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Session Year</label>
+                            <select name="session" id='session' class="form-control">
+                                <option value="">----</option>
+                                {% for session in sessions  %}
+                                <option value="{{session.id}}">{{session}} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class='col-md-6'>
+                            <label> Exam Name </label>
+                            <select class='form-control' id='exam_name' name='exam_name'>
+                                <option value=''>----</option>
+                                {% for examname in examnames %}
+                                <option value="{{examname.id}}">{{examname.exam_name}} </option>
+                                {% endfor %}
+                            </select>
+                       
+                            <label> Term </label>
+                            <select class='form-control' id='term_select' name='term'>
+                                <option value=''>----</option>
+                                <option value='Term-1'>Term-1</option>
+                                <option value='Term-2'>Term-2</option>
+                            </select>
+                        </div>
+
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                        <button type="button" id='fetch_student' class="btn btn-primary btn-block">Fetch
+                            Students</button>
+                        <div class="form-group" id="student_data">
+
+                        </div>
+                    </div>
+                </form>
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script>
+    // Course select change event to fetch subjects
+    $("#course1").change(function () {
+        var course = $("#course1").val()
+        $("#subject_data").html(null)
+        if (course.length == 0) {
+            alert("Please select course");
+            return false;
+        }
+        $.ajax({
+            url: "{% url 'staff_get_course' %}",
+            type: 'POST',
+            data: { course: course }
+        }).done(function (response) {
+            var json_data = JSON.parse(response)
+
+            if (json_data.length < 1) {
+                alert("No data to display")
+            } else {
+                var div_data = "</hr><div class='form-group'> <label>Subject</label> <select class ='form-control' name ='subject_data1' id='subject_data1'>"
+                for (key in json_data) {
+                    div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['name'] + "</option>"
+                }
+                div_data += "</select></div>"
+                $("#subject_data").html(div_data);
+            }
+
+        }).fail(function () {
+            alert("Error in fetching subjects")
+        })
+    })
+
+    // Exam name select change event to enable/disable score fields
+    $(document).on("change", "#exam_name", function () {
+        let selectedText = this.options[this.selectedIndex].text.toLowerCase().trim();
+
+      
+        $("#test_score").prop("disabled", true);
+        $("#exam_score").prop("disabled", true);
+        $("#semester_score").prop("disabled", true);
+
+        
+        if (selectedText.startsWith("tp")) {
+            $("#test_score").prop("disabled", false);
+        } else if (selectedText.startsWith("pt")) {
+            $("#exam_score").prop("disabled", false);
+        } else if (selectedText.includes("semester")) {
+            $("#semester_score").prop("disabled", false);
+        }
+    });
+
+  
+    $(document).ready(function () {
+        $("#fetch_student").click(function () {
+            var course = $("#course1").val();
+            var subject = $("#subject_data").val();
+            var session = $("#session").val();
+            $("#student_data").html(null);
+
+            if (subject.length == 0 || session.length == 0 || course.length == 0) {
+                alert("Please select session and subject");
+                return false;
+            }
+
+            $.ajax({
+                url: "{% url 'get_students' %}",
+                type: 'POST',
+                data: {
+                    subject: subject,
+                    session: session,
+                    course: course
+                }
+            }).done(function (response) {
+                var json_data = JSON.parse(response);
+                if (json_data.length < 1) {
+                    alert("No data to display");
+                } else {
+                    var div_data = "<hr/><div class='form-group'> <label> Student List</label> <select class='student_list form-control' name='student_list'>";
+                    for (key in json_data) {
+                        div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['name'] + " </option>";
+                    }
+
+                    div_data += "</select></div>";
+
+                    // Remaining input fields (test, exam, semester, remarks)
+                    div_data += `
+                    <div class='form-group row'>
+                        <div class='col-md-6'>
+                            <label> Test Paper Score </label>
+                            <input class='form-control' id='test_score' name='test' placeholder='Test Paper Score' value='0' disabled />
+                        </div>
+                        <div class='col-md-6'>
+                            <label> Periodic Test Score </label>
+                            <input class='form-control' id='exam_score' placeholder='Periodic Test Score' name='exam' value='0' disabled />
+                        </div>
+                        <div class='col-md-6'>
+                            <label> Semester Score </label>
+                            <input class='form-control' id='semester_score' placeholder='Semester Score' name='semester_score' value='0' disabled />
+                        </div>
+                        <div class='col-md-6'>
+                            <label> Remarks </label>
+                            <select class='form-control' name='remarks' id='remarks'>
+                                <option value=''>----</option>
+                                <option value='Excellent'>Excellent</option>
+                                <option value='Very Good'>Very Good</option>
+                                <option value='Good'>Good</option>
+                                <option value='Average'>Average</option>
+                                <option value='Below Average'>Below Average</option>
+                                <option value='Poor'>Poor</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class='form-group'>
+                        <button id='save_result' class='btn btn-success' type='submit'>Save Result</button>
+                    </div>`;
+
+                    $("#student_data").html(div_data);
+
+                    // Enable the exam name dropdown
+                    $("#exam_name").trigger("change");
+
+                    // Save button click validation
+                    $("#save_result").click(function (e) {
+                        var exam = parseFloat($("#exam_score").val());
+                        var test = parseFloat($("#test_score").val());
+                        var semester = parseFloat($("#semester_score").val());
+                        var remarks = $("#remarks").val();
+                        var term = $("#term_select").val();
+
+                        if (remarks.length == 0) {
+                            alert("Please select remarks.");
+                            e.preventDefault();
+                        }
+
+                        if (term === "Term-1" || term === "Term-2") {
+                            if (!$("#test_score").prop("disabled") && (isNaN(test) || test > 20 || test < 0)) {
+                                alert("Test score should be between 0 and 20.");
+                                e.preventDefault();
+                            }
+                            if (!$("#exam_score").prop("disabled") && (isNaN(exam) || exam > 40 || exam < 0)) {
+                                alert("Exam score should be between 0 and 40.");
+                                e.preventDefault();
+                            }
+                            if (!$("#semester_score").prop("disabled") && (isNaN(semester) || semester > 60 || semester < 0)) {
+                                alert("Semester score should be between 0 and 60.");
+                                e.preventDefault();
+                            }
+                        }
+                    });
+                }
+            }).fail(function () {
+                alert("Error in fetching students")
+            })
+        });
+    });
+</script>
+{% endblock custom_js %}
+

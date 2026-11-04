@@ -1,0 +1,142 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Parent Portal &bull; Search &amp; Link Ward{% endblock breadcrumb %}
+{% block page_heading %}Search &amp; Link Student{% endblock page_heading %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <!-- Back Link -->
+  <div class="flex items-center justify-between pb-1 border-b border-slate-200">
+    <a href="{% url 'parent_home' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
+      <span class="material-symbols-outlined text-base">arrow_back</span>
+      <span>Back to Dashboard</span>
+    </a>
+  </div>
+
+  <!-- Messages Alert -->
+  {% if messages %}
+    <div class="space-y-2">
+      {% for message in messages %}
+        <div class="p-4 rounded-xl text-sm font-medium flex items-center gap-3 {% if message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200{% elif message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-sky-50 text-sky-700 border border-sky-200{% endif %}">
+          <span class="material-symbols-outlined text-xl">
+            {% if message.tags == 'error' %}error{% elif message.tags == 'success' %}check_circle{% else %}info{% endif %}
+          </span>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Link Form Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl">person_search</span>
+        </div>
+        <div>
+          <h3 class="card-title">Link a Student to Your Guardian Portal</h3>
+          <p class="text-xs text-slate-500 font-normal mt-0.5">Enter the student's registered name and admission number to request access</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form method="POST" action="{% url 'submit_student_notification' %}" class="space-y-5">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="form-group mb-0">
+            <label for="studentName" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-indigo-500">person</span>
+              Student Full Name <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" class="form-control" id="studentName" name="student_name" placeholder="Full name as per admission records" required />
+          </div>
+
+          <div class="form-group mb-0">
+            <label for="admissionNumber" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-sky-500">badge</span>
+              Admission Number <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" class="form-control font-mono" id="admissionNumber" name="admission_number" placeholder="e.g. 1001" required />
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-start gap-3">
+          <span class="material-symbols-outlined text-lg text-indigo-600 shrink-0 mt-0.5">verified_user</span>
+          <div class="space-y-1">
+            <p class="font-bold text-slate-700">Verification Process</p>
+            <p class="text-slate-500 leading-relaxed">
+              Upon submission, our administrative staff will verify the enrollment records and match your parent details. You will automatically receive full access to attendance logs, exam marksheets, and teachers' remarks once approved.
+            </p>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+          <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 transition-all">
+            <span class="material-symbols-outlined text-base">send</span>
+            <span>Submit Verification Request</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Verification History Card -->
+  {% if notifications %}
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-amber-500">history</span>
+        <h4 class="card-title text-sm font-bold">Your Verification Requests</h4>
+      </div>
+      <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
+        {{ notifications|length }} Records
+      </span>
+    </div>
+    <div class="card-body p-0 overflow-x-auto">
+      <table class="table table-bordered table-hover w-full mb-0 text-sm">
+        <thead class="bg-slate-50 text-slate-700">
+          <tr>
+            <th class="w-12 text-center">#</th>
+            <th>Student Name &amp; Details</th>
+            <th>Submitted On</th>
+            <th class="text-center w-28">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for notif in notifications %}
+            <tr class="hover:bg-slate-50/70 transition-colors">
+              <td class="text-center font-mono text-slate-400 text-xs">{{ forloop.counter }}</td>
+              <td>
+                {% if notif.student %}
+                  <span class="font-semibold text-slate-800">{{ notif.student.admin.first_name }} {{ notif.student.admin.last_name }}</span>
+                  <span class="block text-xs font-mono text-slate-500">Adm: {{ notif.student.admission_number }}</span>
+                {% else %}
+                  <span class="font-medium text-slate-700 text-xs">{{ notif.message }}</span>
+                {% endif %}
+              </td>
+              <td class="text-xs text-slate-500 font-mono">{{ notif.created_at|date:"d M Y, h:i A" }}</td>
+              <td class="text-center">
+                {% if notif.status == 'Approved' %}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Approved</span>
+                {% elif notif.status == 'Rejected' %}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">Rejected</span>
+                {% else %}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Pending</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock content %}

@@ -1,0 +1,96 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block content %}
+<div class="container mt-4">
+   
+<html>
+<head>
+    
+    <script>
+   function fetchExams() {
+    const term = document.getElementById("term").value;
+    $('#exam').html('<option value="">Select Exam</option>');
+
+    if (!term) {
+        alert('Please select a Term');
+        return;
+    }
+
+    $.ajax({
+        url: '{% url "get_exams_by_term" %}',
+        type: 'POST',
+        data: {
+            term: term,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function (response) {
+            if (response.length < 1) {
+                alert('No exam available for this Term');
+                return;
+            }
+            let options = '<option value="">Select Exam</option>';
+            response.forEach(function (exam) {
+                options += `<option value="${exam.id}">${exam.exam_name}</option>`;
+            });
+            $('#exam').html(options);
+        },
+        error: function () {
+            alert('Error loading exams');
+        }
+    });
+}
+    </script>
+</head>
+<body>
+   
+
+    <form method="GET" class="mb-4">
+         <div class="row">
+             <div class="col-md-5">
+       
+       <select name="course" required class="form-control">
+    <option value="">-- Select Course & Division --</option>
+    {% for course in courses %}
+        <option value="{{ course.id }}" {% if course.id|stringformat:'s' == selected_course %}selected{% endif %}>
+            {{ course.name }} - {{ course.division }}
+        </option>
+    {% endfor %}
+</select><br><br>
+    </div>
+    <div class="col-md-5">
+       
+       <select id="term" class="form-control" name="term" onchange="fetchExams()" required>
+       <option value="">-- Select Term --</option>
+    {% for t in terms %}
+        <option value="{{ t }}" {% if t|stringformat:'s' == selected_term %}{% endif %}>
+            {{ t }}
+        </option>
+    {% endfor %}
+</select><br><br>
+    </div>
+    <div class="col-md-5">
+        
+       <select id="exam" name="exam" required class="form-control">
+    <option value="">-- Select Exam --</option>
+    {% for e in exams %}
+        <option value="{{ e.id }}" {% if e.id|stringformat:'s' == selected_exam %}selected{% endif %}>
+            {{ e.exam_name }}
+        </option>
+    {% endfor %}
+</select><br><br>
+    </div>
+    <div class="col-md-2"> 
+        <button type="submit" class="btn btn-primary w-100">View Results</button>
+          </div>
+    </div>
+    </form>
+
+         
+   
+    
+    </div>
+
+</body>
+</html>
+{% endblock %}

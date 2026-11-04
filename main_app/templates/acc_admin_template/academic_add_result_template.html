@@ -1,0 +1,125 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block content %}
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <form method="POST">
+          {% csrf_token %}
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">{{ page_title }}</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Course</label>
+                <select name="course" class="form-control" id="course">
+                  <option value="">Select Course</option>
+                  {% for course in courses %}
+                    <option value="{{ course.id }}">{{ course.name }} - {{ course.division }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-group" id="subject_data">
+                <label>Subject</label>
+                <select name="subject_data1" id="subject_data1" class="form-control">
+                  <option value="">Select Subject</option>
+                </select>
+              </div>
+
+              {{ form }}
+
+            </div>
+            <div class="card-footer">
+              <button type="button" id="exel_data" class="btn btn-primary btn-block">Submit</button>
+              <div class="form-group" id="bulk_data"></div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+  $(document).ready(function () {
+    // Load subjects when course changes
+    $('#course').change(function () {
+      var course = $(this).val();
+      $('#subject_data1').html('<option value="">Select Subject</option>');
+      if (!course) {
+        alert('Please select a course');
+        return;
+      }
+      $.ajax({
+        url: '{% url "get_course" %}',
+        type: 'POST',
+        data: {
+          course: course,
+          csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function (response) {
+          var json_data = JSON.parse(response);
+          if (json_data.length < 1) {
+            alert('No subjects available for this course');
+            return;
+          }
+          var options = '<option value="">Select Subject</option>';
+          json_data.forEach(function (item) {
+            options += `<option value="${item.id}">${item.name} (${item.staff})</option>`;
+          });
+          $('#subject_data1').html(options);
+        },
+        error: function () {
+          alert('Error loading subjects');
+        }
+      });
+    });
+
+    // Load students when course and subject are selected
+    $('#exel_data').click(function () {
+      var course = $('#course').val();
+      var subject_data1 = $('#subject_data1').val();
+      $('#bulk_data').html('');
+      if (!course || !subject_data1) {
+        alert('Please select both course and subject');
+        return;
+      }
+      $.ajax({
+        url: '{% url "get_students_list" %}',
+        type: 'POST',
+        data: {
+          course: course,
+          subject_data1: subject_data1,
+          csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function (response) {
+          var json_data = JSON.parse(response);
+          if (json_data.length < 1) {
+            alert('No students found');
+            return;
+          }
+          var html = '<hr/><div class="form-group"><label>Student List</label><table class="table table-bordered">';
+          html += '<thead><tr><th>Admission Number</th><th>Student Name</th></tr></thead><tbody>';
+          json_data.forEach(function (student) {
+            html += `<tr><td>${student.admission_number}</td><td>${student.name}</td></tr>`;
+          });
+          html += '</tbody></table>';
+          html += `<div class='form-group'><a href='/curriculam/save_excel_data/${course}/${subject_data1}/'>Download Excel Form</a></div>`;
+          $('#bulk_data').html(html);
+        },
+        error: function () {
+          alert('Error fetching student data');
+        }
+      });
+    });
+  });
+</script>
+{% endblock custom_js %}

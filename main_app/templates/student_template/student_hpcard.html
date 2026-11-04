@@ -1,0 +1,226 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<style>
+    .target{
+        color: red;
+        text-align: right;
+   }
+     
+</style>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+       
+                <!-- /.card -->
+<div class="card card-primary">
+    <div class="card-header"><h3 class="card-title">{{page_title}}</h3>
+       
+       
+    </div>
+    
+   <div class="table p-2">
+       
+       <table class="table table-bordered">
+           <tr>
+               <th>ID</th>
+               <th>Subject</th>
+               <th>Test</th>
+               <th>Exam</th>
+               <th>Remark</th>
+               <th>Total</th>
+               <th>Term</th>
+               
+          </tr>
+       {% for result in results %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{ result.subject.subject.name }}</td>
+            <td>{{ result.test }}</td>
+            <td>{{ result.exam }}</td>
+            <td>{{ result.remarks }}</td>
+            <td>{{ result.test|add:result.exam }}</td>
+          <td>{{result.term}}</td>
+          
+        </tr>
+           {% endfor %}
+        </table> 
+        {% comment %}<input type="submit" value="Holistic Progress Card" class="btn btn-primary" onclick="openPrintWindow()"> {% endcomment %}
+            <div> <input type="button" value="Holistic Progress Card" class="btn btn-primary" id="hpcard" name="hpcard">
+           </div>
+         
+    </div>
+    </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+{% block custom_js %}
+<script>
+    $("#hpcard").click(function() {
+       
+        $.ajax({
+            url: "{% url 'student_report_hpc' %}",
+            type: 'POST',
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                document.open();
+                document.write(response);
+                document.close();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+            }
+        });
+    });
+
+    function openPrintWindow() {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Holistic Progress Card</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+                        .container { width: 90%; margin: auto; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { padding: 10px; border: 1px solid #000; text-align: left; }
+                        .photo { float: right; border: 1px solid #000; padding: 10px; width: 120px; height: 150px; }
+                        .title { color: red; font-size: 30px; }
+                        h2 { margin-top: 40px; }
+                        .section { margin-bottom: 40px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <!-- Page 1: Student Profile -->
+                        <h1 class="title">School Name</h1>
+                        <p>(A CBSE Affiliated Senior Secondary Co-Educational English Medium School)</p>
+                        <p>Phone No: 1111-222222, 333333 | Website: www.yourschool.com</p>
+                        <h2>REPORT CARD</h2>
+                        <p>(Issued by School as per directives of Central Board of Secondary Education, Delhi)</p>
+                        <h3>Class: 10 A</h3>
+
+                        <div class="photo">Student's Photo</div>
+
+                        <table>
+                            <tr><th>Admission No.</th><td>________________________</td></tr>
+                            <tr><th>CBSE Reg. No.</th><td>________________________</td></tr>
+                            <tr><th>Roll No.</th><td>________________________</td></tr>
+                            <tr><th>Class & Section</th><td>________________________</td></tr>
+                            <tr><th>Name of the Student</th><td>________________________</td></tr>
+                            <tr><th>Date of Birth</th><td>________________________</td></tr>
+                            <tr><th>Father's Name</th><td>________________________</td></tr>
+                            <tr><th>Mother's Name</th><td>________________________</td></tr>
+                            <tr><th>Contact No.</th><td>________________________</td></tr>
+                            <tr><th>Residential Address</th><td>________________________</td></tr>
+                        </table>
+
+                        <!-- Page 2: Scholastic & Co-Scholastic Area -->
+                        <h2>Part 1: Scholastic Area</h2>
+                        <table>
+                        <tr class="target" colspan="7">
+                        <th></th>
+                        <th></th>
+                           <th colspan="2">Term-1</th>
+                           <th colspan="2">Term-2</th>  
+                            <th colspan="2" >Term-3</th>
+                            
+                        </tr>
+                            <tr>
+                                <th>Subject Code</th>
+                                <th>Subject</th>
+                                <th>Test</th>
+                                <th>Exam</th>
+                                <th>Test</th>
+                                <th>Exam</th>
+                                <th>Test</th>
+                                <th>Exam</th>
+                                <th>Overall Total (Out of 100)</th>
+                            </tr>
+                            
+                                <td>301</td><td>English Core</td>
+                                <td>________</td><td>________</td><td>________</td><td>________</td><td>________</td><td>________</td><td>________</td>
+                            </tr>
+                            <tr>
+                                <td>041</td><td>Mathematics</td>
+                                <td>________</td><td>________</td><td>________</td><td>________</td><td>________</td><td>________</td><td>________</td>
+                            </tr>
+                            <tr>
+                                <td>042</td><td>Physics (Theory/Practical)</td>
+                                <td>________</td><td>________</td><td>________</td><td>________</td><td>________</td><td>________</td><td>________</td>
+                            </tr>
+                            <tr>
+                                <td>043</td><td>Chemistry (Theory/Practical)</td>
+                                <td>________</td><td>________</td><td>________</td><td>________</td><td>________</td><td>________</td><td>________</td>
+                            </tr>
+                            <tr>
+                                <td>048</td><td>Physical Education (Practical)</td>
+                                <td>________</td><td>________</td><td>________</td><td>________</td><td>________</td><td>________</td><td>________</td>
+                            </tr>
+                        </table>
+
+                        <h2>Part 2: Co-Scholastic Activities (Assessed on a 5-Point Scale)</h2>
+                        <table>
+                            <tr><th>Activities</th><th>Grade</th></tr>
+                            <tr><td>Work Education</td><td>________</td></tr>
+                            <tr><td>Games</td><td>________</td></tr>
+                            <tr><td>Health & Fitness</td><td>________</td></tr>
+                            <tr><td>SEWA</td><td>________</td></tr>
+                        </table>
+
+                        <h2>Attendance & Remarks</h2>
+                        <table>
+                            <tr><th>Attendance</th><td>________</td></tr>
+                            <tr><th>Remarks</th><td>________</td></tr>
+                            <tr><th>Result</th><td>________</td></tr>
+                        </table>
+
+                        <h2>Grading System</h2>
+                        <table>
+                            <tr>
+                                <th>Grade</th><th>Marks Range</th>
+                                <th>Grade (Co-Scholastic)</th><th>Grade Points</th>
+                            </tr>
+                            <tr>
+                                <td>A1</td><td>91 - 100</td>
+                                <td>A</td><td>5</td>
+                            </tr>
+                            <tr>
+                                <td>A2</td><td>81 - 90</td>
+                                <td>B</td><td>4</td>
+                            </tr>
+                            <tr>
+                                <td>B1</td><td>71 - 80</td>
+                                <td>C</td><td>3</td>
+                            </tr>
+                            <tr>
+                                <td>B2</td><td>61 - 70</td>
+                                <td>D</td><td>2</td>
+                            </tr>
+                            <tr>
+                                <td>C1</td><td>51 - 60</td>
+                                <td>E</td><td>1</td>
+                            </tr>
+                        </table>
+
+                        <p><strong>Note:</strong> Report Card scheme based on CBSE new Examination scheme for Class 11.</p>
+                        <p><a href="https://www.psadigitalindia.com" target="_blank">www.psadigitalindia.com</a></p>
+
+                        <button onclick="window.print()">Print</button>
+                    </div>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+</script>
+{% endblock custom_js %}

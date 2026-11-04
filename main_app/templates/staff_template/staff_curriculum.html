@@ -1,0 +1,113 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}Curriculum view{% endblock page_title %}
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                    <form method="POST">
+                        {% csrf_token %}
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Curriculum view</h3>
+                    </div>
+
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <div class="card-body">
+                        <div class="card-body">
+                            <table id="example2" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>SN</th>
+                                        <th>Class</th>
+                                        <th>Subject</th>
+                                        <th>Lesson</th>
+                                        <th>Term </th>
+                                        <th>Status</th>
+                                       
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                  
+                                    {%  for result in results %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{result.course}}</td>
+                                        <td>{{result.subject}}</td>
+                                        <td>{{result.lesson}}</td>
+                                        <td>{{result.term}}</td>
+                                        <td>
+                                            {% if result.status == False %}
+                                                <input type="checkbox" name="status" value="{{ result.id }}" id="status_check">
+                                            {% elif result.status == True %}
+                                                <input type="checkbox" name="status" value="true" id="status_check" checked>
+                                            {% else %}
+                                                <input type="checkbox" name="status" value="unknown" id="status_check">
+                                            {% endif %}
+                                        </td>
+                                           
+                                    </tr>
+                                       
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                       
+                        <div class="card-footer">
+                            <button type="button" id='add_curriculam' class="btn btn-primary btn-block">Add Curriculam</button>
+                            <div class="form-group" id="curriculam_data">
+    
+                            </div>
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                        
+                       
+                    </div>
+                </form>
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+{% block custom_js %}
+
+<script>
+       
+        $("#add_curriculam").click(function () {
+           
+           const selectedValues = [];
+           $('input[name="status"]:checked').each(function () {
+            // Push each value into the array
+            selectedValues.push($(this).val());
+        });
+        console.log("Selected Values:", selectedValues);
+       
+           $("#curriculam_data").html(null)
+     if (selectedValues.length  == 0 ){
+    alert("Please select checkbox");
+    return false;
+}
+            $.ajax({
+                url: "{% url 'tick_status' %}",
+                type: 'POST',
+                data: {
+                    selectedValues: selectedValues,
+                    }
+            }).done(function (response) {
+                
+            }).fail(function (response) {
+                alert("Status updated successfully")
+            }) 
+});
+
+</script>
+{% endblock custom_js %}

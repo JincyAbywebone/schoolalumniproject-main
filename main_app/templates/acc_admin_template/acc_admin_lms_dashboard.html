@@ -1,0 +1,300 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}LMS Dashboard{% endblock breadcrumb %}
+{% block page_heading %}Learning Management System (LMS) Dashboard{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- LMS Header Banner -->
+  <div class="p-6 lg:p-8 rounded-2xl bg-gradient-to-r from-indigo-950 via-indigo-900 to-purple-950 text-white shadow-xl relative overflow-hidden">
+    <!-- Background glowing accents -->
+    <div class="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-purple-500/15 blur-3xl pointer-events-none"></div>
+    <div class="absolute right-48 -top-12 w-48 h-48 rounded-full bg-indigo-400/15 blur-2xl pointer-events-none"></div>
+
+    <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div class="space-y-2 max-w-2xl">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-indigo-200 text-xs font-semibold backdrop-blur-sm border border-white/10">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Digital Classroom Repository &bull; View Access</span>
+        </div>
+        <h2 class="text-2xl lg:text-3xl font-bold tracking-tight text-white">
+          E-Learning &amp; Academic Media Hub
+        </h2>
+        <p class="text-sm text-indigo-200/90 leading-relaxed">
+          Centralized academic repository of curriculum video lectures, detailed reference notes, and illustrative diagrams uploaded by teaching faculty for students.
+        </p>
+      </div>
+
+      <!-- Quick Navigate Buttons -->
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <a href="{% url 'acc_admin_view_lms_videos' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-indigo-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:bg-indigo-50 transition-all hover:scale-105">
+          <span class="material-symbols-outlined text-base text-indigo-600">videocam</span>
+          <span>Video Lectures</span>
+        </a>
+        <a href="{% url 'acc_admin_view_lms_notes' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold text-xs tracking-wide shadow-md backdrop-blur-sm border border-white/15 transition-all">
+          <span class="material-symbols-outlined text-base text-emerald-300">description</span>
+          <span>Study Notes</span>
+        </a>
+        <a href="{% url 'acc_admin_view_lms_images' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600/80 hover:bg-purple-600 text-white font-semibold text-xs tracking-wide shadow-md backdrop-blur-sm border border-white/15 transition-all">
+          <span class="material-symbols-outlined text-base text-amber-300">photo_library</span>
+          <span>Diagrams &amp; Images</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 Resource Metric Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+    <!-- Card 1: Video Lectures -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+      <div class="flex items-start justify-between">
+        <div>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Video Lectures</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">{{ video_count|default:"0" }}</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">Videos</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Recorded sessions &amp; tutorial modules</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">smart_display</span>
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+        <a href="{% url 'acc_admin_view_lms_videos' %}" class="font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+          <span>Explore Video Archive</span>
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+        <span class="text-slate-400 font-medium">MP4 / Video</span>
+      </div>
+    </div>
+
+    <!-- Card 2: Study Notes -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+      <div class="flex items-start justify-between">
+        <div>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Course Notes &amp; Docs</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">{{ note_count|default:"0" }}</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">Documents</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Lecture notes, handouts &amp; references</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">description</span>
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+        <a href="{% url 'acc_admin_view_lms_notes' %}" class="font-semibold text-emerald-600 hover:text-emerald-800 flex items-center gap-1">
+          <span>Browse Notes</span>
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+        <span class="text-slate-400 font-medium">PDF / Text</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Educational Images -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+      <div class="flex items-start justify-between">
+        <div>
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Visual Assets</span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">{{ image_count|default:"0" }}</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700">Images</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Diagrams, charts &amp; formula sheets</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">photo_library</span>
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+        <a href="{% url 'acc_admin_view_lms_images' %}" class="font-semibold text-amber-600 hover:text-amber-800 flex items-center gap-1">
+          <span>View Image Gallery</span>
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+        <span class="text-slate-400 font-medium">PNG / JPEG</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Recent Uploads 3-Column Showcase -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Column 1: Recent Videos -->
+    <div class="card flex flex-col justify-between">
+      <div>
+        <div class="card-header">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-indigo-600 text-xl">smart_display</span>
+            <h3 class="card-title text-base font-bold text-slate-900">Recent Videos</h3>
+          </div>
+          <a href="{% url 'acc_admin_view_lms_videos' %}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+            View All &rarr;
+          </a>
+        </div>
+        <div class="card-body p-0 divide-y divide-slate-100">
+          {% for video in recent_videos %}
+            <div class="p-4 hover:bg-slate-50 transition-colors flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-xl">play_circle</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-sm font-semibold text-slate-800 truncate" title="{{ video.title }}">
+                  {{ video.title }}
+                </h4>
+                <div class="flex items-center gap-2 mt-1 text-xs text-slate-500 flex-wrap">
+                  {% if video.subject %}
+                    <span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-medium">
+                      {{ video.subject.name|default:video.subject }}
+                    </span>
+                  {% endif %}
+                  {% if video.course %}
+                    <span class="text-slate-400">&bull; {{ video.course.name }}-{{ video.course.division }}</span>
+                  {% endif %}
+                </div>
+                <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>By: {{ video.uploaded_by.first_name }} {{ video.uploaded_by.last_name }}</span>
+                  <span>{{ video.created_at|date:"d M Y" }}</span>
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="p-8 text-center">
+              <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                <span class="material-symbols-outlined text-xl">videocam_off</span>
+              </div>
+              <p class="text-xs text-slate-500 font-medium">No video lectures uploaded yet</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="card-footer bg-slate-50/70">
+        <a href="{% url 'acc_admin_view_lms_videos' %}" class="text-xs font-semibold text-slate-600 hover:text-indigo-600 flex items-center justify-center gap-1 py-1">
+          <span>Open Full Video Manager</span>
+          <span class="material-symbols-outlined text-sm">open_in_new</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Column 2: Recent Notes -->
+    <div class="card flex flex-col justify-between">
+      <div>
+        <div class="card-header">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-emerald-600 text-xl">description</span>
+            <h3 class="card-title text-base font-bold text-slate-900">Recent Notes</h3>
+          </div>
+          <a href="{% url 'acc_admin_view_lms_notes' %}" class="text-xs font-semibold text-emerald-600 hover:text-emerald-800">
+            View All &rarr;
+          </a>
+        </div>
+        <div class="card-body p-0 divide-y divide-slate-100">
+          {% for note in recent_notes %}
+            <div class="p-4 hover:bg-slate-50 transition-colors flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-xl">article</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-sm font-semibold text-slate-800 truncate" title="{{ note.title }}">
+                  {{ note.title }}
+                </h4>
+                <div class="flex items-center gap-2 mt-1 text-xs text-slate-500 flex-wrap">
+                  {% if note.subject %}
+                    <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">
+                      {{ note.subject.name|default:note.subject }}
+                    </span>
+                  {% endif %}
+                  {% if note.course %}
+                    <span class="text-slate-400">&bull; {{ note.course.name }}-{{ note.course.division }}</span>
+                  {% endif %}
+                </div>
+                <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>By: {{ note.uploaded_by.first_name }} {{ note.uploaded_by.last_name }}</span>
+                  <span>{{ note.created_at|date:"d M Y" }}</span>
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="p-8 text-center">
+              <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                <span class="material-symbols-outlined text-xl">drafts</span>
+              </div>
+              <p class="text-xs text-slate-500 font-medium">No study notes uploaded yet</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="card-footer bg-slate-50/70">
+        <a href="{% url 'acc_admin_view_lms_notes' %}" class="text-xs font-semibold text-slate-600 hover:text-emerald-600 flex items-center justify-center gap-1 py-1">
+          <span>Open Full Notes Archive</span>
+          <span class="material-symbols-outlined text-sm">open_in_new</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Column 3: Recent Images -->
+    <div class="card flex flex-col justify-between">
+      <div>
+        <div class="card-header">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-600 text-xl">photo_library</span>
+            <h3 class="card-title text-base font-bold text-slate-900">Recent Diagrams</h3>
+          </div>
+          <a href="{% url 'acc_admin_view_lms_images' %}" class="text-xs font-semibold text-amber-600 hover:text-amber-800">
+            View All &rarr;
+          </a>
+        </div>
+        <div class="card-body p-0 divide-y divide-slate-100">
+          {% for image in recent_images %}
+            <div class="p-4 hover:bg-slate-50 transition-colors flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-xl">image</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-sm font-semibold text-slate-800 truncate" title="{{ image.title }}">
+                  {{ image.title }}
+                </h4>
+                <div class="flex items-center gap-2 mt-1 text-xs text-slate-500 flex-wrap">
+                  {% if image.subject %}
+                    <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">
+                      {{ image.subject.name|default:image.subject }}
+                    </span>
+                  {% endif %}
+                  {% if image.course %}
+                    <span class="text-slate-400">&bull; {{ image.course.name }}-{{ image.course.division }}</span>
+                  {% endif %}
+                </div>
+                <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>By: {{ image.uploaded_by.first_name }} {{ image.uploaded_by.last_name }}</span>
+                  <span>{{ image.created_at|date:"d M Y" }}</span>
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="p-8 text-center">
+              <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                <span class="material-symbols-outlined text-xl">hide_image</span>
+              </div>
+              <p class="text-xs text-slate-500 font-medium">No diagrams or images uploaded yet</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="card-footer bg-slate-50/70">
+        <a href="{% url 'acc_admin_view_lms_images' %}" class="text-xs font-semibold text-slate-600 hover:text-amber-600 flex items-center justify-center gap-1 py-1">
+          <span>Open Full Image Gallery</span>
+          <span class="material-symbols-outlined text-sm">open_in_new</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock content %}

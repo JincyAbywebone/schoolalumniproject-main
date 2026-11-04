@@ -1,0 +1,222 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+
+   <form method="POST">
+                    {% csrf_token %}
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">{{ page_title }}</h3>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Select Course</label>
+                                <select name="course" class="form-control" id="course">
+                                    <option value="">Select Course</option>
+                                    {% for course in courses %}
+                                    <option value="{{ course.id }}">{{ course.name }} - {{ course.division }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="subject_data_value">
+                                <label>Select Subject</label>
+                                <select name="subject_data_value" class="form-control" id="subject_data_value1">
+                                    <option value="">Select Subject</option>
+                                    {% for subject in subjects %}
+                                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Select Exam</label>
+                                <select class="form-control" id="exam_name" name="exam_name">
+                                    <option value="">Select Exam</option>
+                                    {% for examname in examnames %}
+                                    <option value="{{ examname.id }}">{{ examname.exam_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Select Term</label>
+                                <select class="form-control" id="term_select" name="term_select">
+                                    <option value="">Select Term</option>
+                                </select>
+                            </div>
+ 
+    <select class="form-control" id="session_select" name="session_select">
+        {% if session %}
+            <option value="{{ session.id }}" selected>
+                {{ session.start_year }} - {{ session.end_year }}
+            </option>
+        {% else %}
+            <option value="">No Active Session</option>
+        {% endif %}
+    </select>
+</div>
+                            {{ form }}
+                        </div>
+
+                        <div class="card-footer">
+                            <button type="button" id="bulk_student_details" class="btn btn-primary btn-block">Submit</button>
+                            <div class="form-group" id="bulk_data_list">
+                              
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+{% block custom_js %}
+<script>
+$(document).ready(function () {
+
+    // Course selection → Subject list
+    $("#course").change(function () {
+        let course = $(this).val();
+        if (!course) {
+            alert("Please select a course");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_course_lists' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                let subjects = JSON.parse(response);
+                let subjectOptions = "<option value=''>Select Subject</option>";
+                subjects.forEach(subject => {
+                    subjectOptions += `<option value="${subject.id}">${subject.name}(${subject.staff})</option>`;
+                });
+                $("#subject_data_value1").html(subjectOptions);
+            },
+            error: function () {
+                alert("Error fetching subjects");
+            }
+        });
+    });
+
+    // Exam name → Term list
+    $("#exam_name").change(function () {
+        let exam_id = $(this).val();
+        $("#term_select").html("<option value=''>----</option>");
+
+        if (!exam_id) {
+            alert("Please select an exam");
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_term_list' %}",
+            type: 'POST',
+            data: {
+                exam_name: exam_id,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (terms) {
+                if (!terms.length) {
+                    alert("No terms available");
+                    return;
+                }
+                terms.forEach(item => {
+                    $("#term_select").append(`<option value="${item.name}">${item.name}</option>`);
+                });
+            },
+            error: function () {
+                alert("Error fetching terms");
+            }
+        });
+    });
+});
+    // Submit button click
+$("#bulk_student_details").click(function () {
+    let course = $("#course").val();
+    let subject = $("#subject_data_value1").val();
+    let exam = $("#exam_name").val();
+    let term = $("#term_select").val();
+    let session = $("#session_select").val();
+
+    if (!course || !subject || !exam || !term || !session) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    $.ajax({
+        url: "{% url 'staff_bulk_student_data' %}",
+        type: 'POST',
+        data: {
+            course: course,
+            subject: subject,
+            exam: exam,
+            term: term,
+            session: session,
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+
+        success: function (response) {
+            if (response.length < 1) {
+                alert("No data to display");
+                $("#bulk_data_list").html("");
+            } else {
+                let div_data = `
+                    <hr/>
+                    <div class='form-group'>
+                        <label>Manage Bulk Results</label>
+                        <table id='example2' class='table table-bordered table-hover'>
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Student Name</th>
+                                    <th>Admission No</th>
+                                    <th>Score</th>
+                                    <th>Remarks</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+                response.forEach(function (student, index) {
+                    div_data += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${student.student_name}</td>
+                            <td>${student.admission_number}</td>
+                            <td>${student.test}</td>
+                            <td>${student.remarks || ""}</td>
+                            <td>
+                                <a href='edit_bulkresult/${student.student_id}' class='btn btn-primary'>Edit</a>
+                                <a href='delete_bulkresult/${student.student_id}' class='btn btn-danger'>Delete</a>
+                            </td>
+                        </tr>`;
+                });
+
+                div_data += `
+                            </tbody>
+                        </table>
+                    </div>`;
+                $("#bulk_data_list").html(div_data);
+            }
+        }
+    });
+});
+</script>
+{% endblock custom_js %}
+

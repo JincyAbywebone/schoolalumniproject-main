@@ -1,0 +1,230 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <form method="POST">
+                    {% csrf_token %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Course</label>
+                           <select name="course" class="form-control" id="course1">
+            <option value="">----</option>
+            {% for data in data_list %}
+            <option value="{{ data.id }}">{{ data.name }} - {{ data.division }}</option>
+            {% endfor %}
+        </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select name="subject_data" class="form-control" id='subject_data'>
+                                <option value="">----</option>
+                                                       </select>
+                        </div>
+                                                  
+                            <div class="form-group">
+                                <label>Term</label>
+                                <select name="term_wise" class="form-control" id='term_wise'>
+                                    <option value="">Select Term</option>
+                                    <option value="Term-1">Term-1</option>
+                                    <option value="Term-2">Term-2</option>
+                                   
+                                </select>
+                            </div>
+                            
+                            <div class="card-footer">
+                                <button type="Submit" id='manage_result' name='manage_result' class="btn btn-primary btn-block"  with messages=messages >
+                                  Submit  </button>
+                                </div> 
+                                </form>
+                        {% if message %}
+                        <div class="alert alert-{{ message_type }}" style="color: red;padding-left: 750px;">
+                            {{ message }}
+                        </div>
+                        {% endif %}
+                        
+                            <div class="subject_list" id='subject_list'>
+                         <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Student Name</th>
+                                    <th>Course</th>
+                                    <th>Subject</th>
+                                    <th>Test</th>
+                                    <th>Remarks</th>
+                                    <th>Term</th>
+                                     <th>Exam Type</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in subjects_data %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{result.student.admin.first_name}}.{{result.student.admin.last_name}}</td>
+                                    <td>{{result.student.course.name}}-{{result.student.course.division}}</td>
+                                    <td>{{result.subjectmaster.name}}</td>
+                                    <td>{{result.test}}</td>
+                                    <td>{{result.remarks}}</td>
+                                    <td>{{result.term}}</td>
+                                    <td>{{result.exam_type.exam_name}}</td>
+                                    <td>
+                                     <a href="{% url 'edit_result' result.id %}" class="btn btn-primary">Edit</a> -
+                                     <a href="{% url 'delete_result' result.id %}" onclick="return confirmDelete()" class="btn btn-danger">Delete</a>  
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+{% block custom_js %}
+
+
+<script>
+    $("#course1").change(function() {
+        var course = $("#course1").val()  
+        $("#subject_data").html(null)
+         if (course.length == 0){
+            alert("Please select course");
+            return false;
+         }
+         $.ajax({
+            url: "{% url 'staff_get_course' %}",
+            type: 'POST',
+            data: {
+                course: course,
+              }
+        }).done(function (response) {
+            
+           
+           var json_data = JSON.parse(response)
+          
+           if (json_data.length < 1) {
+           
+                    alert("No data to display")
+                } else {
+                    var div_data = "</hr><div class='form-group'> <label>Subject</label> <select class ='form-control' name ='subject_data1' id='subject_data1'>"
+                     for ( key in json_data) {
+                       
+                        div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['name'] + "</option>"
+                    }
+                    
+                    // Close the select and div elements
+                    div_data += "</select></div>"
+                    
+                    // Insert the generated HTML into the element with id 'subject_data'
+                    $("#subject_data").html(div_data);
+                    
+                    // Optional: Alert the generated HTML for debugging
+                   // alert(div_data);
+
+                }
+                
+            }).fail(function (response) {
+                alert("Error in fetching students")
+        
+
+        })
+    })
+   // Wait for #term_wise dropdown change event
+   $("#manage_result").click(function (e) {
+    e.preventDefault();  // Prevent default form submission
+
+    var term_wise = $("#term_wise").val();
+    var course1 = $("#course1").val();
+    var subject = $("#subject_data").val();
+    if (!term_wise || !course1 || !subject) {
+        alert("Please fill all fields!");
+        return;
+    }
+
+    $("#subject_list").html("");  // Clear old data
+
+    // AJAX request to fetch data based on term
+    $.ajax({
+        url: "{% url 'select_termwise' %}",
+        type: 'POST',
+        data: {
+            term_wise: term_wise,
+            course1: course1,
+            subject: subject,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function (response) {
+            console.log("Response Data: ", response);
+
+            if (response.length < 1) {
+                alert("No data to display");
+                return;
+            }
+
+            let div_data = `
+                <hr/>
+                <div class='form-group'>
+                    <label>Manage Student Result</label>
+                    <table id='example2' class='table table-bordered table-hover'>
+                        <thead>
+                            <tr>
+                                <th>SN</th>
+                                <th>Student Name</th>
+                                <th>Course</th>
+                                <th>Subject</th>
+                                <th>Test</th>
+                                <th>Term</th>
+                                <th>Remarks</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            response.forEach(function (result, index) {
+                div_data += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${result.student_name}</td>
+                        <td>${result.course}</td>
+                        <td>${result.subject}</td>
+                        <td>${result.test}</td>
+                        <td>${result.term}</td>
+                        <td>${result.remarks}</td>
+                        <td><a href='${result.edit_url}' class='btn btn-primary'>Edit</a></td>
+                        <td><a href='${result.delete_url}' class='btn btn-danger'>Delete</a></td>
+                    </tr>
+                `;
+            });
+
+            div_data += `</tbody></table></div>`;
+
+            $("#subject_list").html(div_data);
+        },
+        error: function (xhr, status, error) {
+            alert("Error fetching data: " + error);
+            console.error("XHR: ", xhr);
+        }
+    });
+});
+</script>
+{% endblock custom_js %}
+
+
+
+    

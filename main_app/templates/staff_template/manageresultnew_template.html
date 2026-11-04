@@ -1,0 +1,324 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Staff &bull; Exams &bull; Manage Student Results{% endblock breadcrumb %}
+{% block page_heading %}Manage Student Results{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Top Action & Navigation Tabs -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1 border-b border-slate-200">
+    <div class="flex items-center gap-2">
+      <a href="{% url 'staff_manage_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-sm shadow-indigo-600/20">
+        <span class="material-symbols-outlined text-base">manage_search</span>
+        <span>Manage Results</span>
+      </a>
+      <a href="{% url 'staff_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
+        <span class="material-symbols-outlined text-base text-slate-400">upload_file</span>
+        <span>Bulk Upload</span>
+      </a>
+      <a href="{% url 'staff_add_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
+        <span class="material-symbols-outlined text-base text-slate-400">person_add</span>
+        <span>Single Student Entry</span>
+      </a>
+    </div>
+
+    <div>
+      <a href="{% url 'staff_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all">
+        <span class="material-symbols-outlined text-base">add_circle</span>
+        <span>Upload New Marks</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Messages Alert -->
+  {% if message %}
+    <div class="p-4 rounded-xl text-sm font-medium flex items-center gap-3 bg-emerald-50 text-emerald-700 border border-emerald-200">
+      <span class="material-symbols-outlined text-xl">check_circle</span>
+      <span>{{ message }}</span>
+    </div>
+  {% endif %}
+
+  <!-- Filter Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">tune</span>
+        </div>
+        <div>
+          <h3 class="card-title">Filter Student Results</h3>
+          <p class="text-xs text-slate-500 font-normal mt-0.5">Filter results by course, subject, and academic term</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <!-- Course -->
+          <div class="form-group mb-0">
+            <label for="course1" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-indigo-500">school</span>
+              Class / Course &amp; Division <span class="text-rose-500">*</span>
+            </label>
+            <select name="course" class="form-control" id="course1" required>
+              <option value="">-- Choose Class --</option>
+              {% for data in data_list %}
+                <option value="{{ data.id }}">{{ data.name }} - {{ data.division }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Subject -->
+          <div class="form-group mb-0">
+            <label for="subject_data" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-sky-500">menu_book</span>
+              Subject <span class="text-rose-500">*</span>
+            </label>
+            <div id="subject_data">
+              <select name="subject_data" class="form-control">
+                <option value="">-- Select Course First --</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Term -->
+          <div class="form-group mb-0">
+            <label for="term_wise" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-purple-500">calendar_month</span>
+              Academic Term <span class="text-rose-500">*</span>
+            </label>
+            <select name="term_wise" class="form-control" id="term_wise" required>
+              <option value="">-- Select Term --</option>
+              <option value="Term-1">Term-1</option>
+              <option value="Term-2">Term-2</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button type="button" id="manage_result" name="manage_result" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 transition-all">
+            <span class="material-symbols-outlined text-base">search</span>
+            <span>Filter Results</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Dynamic Results Container -->
+  <div id="subject_list">
+    <!-- Initial Records List -->
+    {% if subjects_data %}
+    <div class="card">
+      <div class="card-header">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-emerald-600">assignment</span>
+          <h3 class="card-title">All Assigned Student Results</h3>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">
+          {{ subjects_data|length }} Records
+        </span>
+      </div>
+
+      <div class="card-body p-0 overflow-x-auto">
+        <table id="example2" class="table table-bordered table-hover w-full mb-0 text-sm">
+          <thead class="bg-slate-50 text-slate-700">
+            <tr>
+              <th class="w-14 text-center">#</th>
+              <th>Student Name</th>
+              <th>Course</th>
+              <th>Subject</th>
+              <th class="text-center">Score</th>
+              <th class="text-center">Remarks</th>
+              <th class="text-center">Term</th>
+              <th class="text-center">Exam Type</th>
+              <th class="w-40 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for result in subjects_data %}
+            <tr class="hover:bg-slate-50/70 transition-colors">
+              <td class="text-center font-mono text-slate-400 text-xs">{{ forloop.counter }}</td>
+              <td class="font-semibold text-slate-800">{{ result.student.admin.first_name }} {{ result.student.admin.last_name }}</td>
+              <td>{{ result.student.course.name }} - {{ result.student.course.division }}</td>
+              <td>{{ result.subjectmaster.name }}</td>
+              <td class="text-center font-bold text-slate-900">{{ result.test }}</td>
+              <td class="text-center">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700">
+                  {{ result.remarks|default:"Recorded" }}
+                </span>
+              </td>
+              <td class="text-center text-xs font-medium text-slate-600">{{ result.term }}</td>
+              <td class="text-center text-xs font-medium text-slate-600">{{ result.exam_type.exam_name }}</td>
+              <td class="text-center">
+                <div class="inline-flex items-center gap-1.5">
+                  <a href="{% url 'edit_result' result.id %}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                    <span class="material-symbols-outlined text-sm">edit</span>
+                    <span>Edit</span>
+                  </a>
+                  <a href="{% url 'delete_result' result.id %}" onclick="return confirm('Are you sure you want to delete this result?');" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors">
+                    <span class="material-symbols-outlined text-sm">delete</span>
+                    <span>Delete</span>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function () {
+    $("#course1").change(function () {
+        var course = $("#course1").val();
+        $("#subject_data").html(null);
+        if (!course || course.length === 0) return;
+
+        $.ajax({
+            url: "{% url 'staff_get_course' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            }
+        }).done(function (response) {
+            var json_data = typeof response === "string" ? JSON.parse(response) : response;
+            if (!json_data || json_data.length < 1) {
+                $("#subject_data").html("<select class='form-control' name='subject_data' id='subject_data1'><option value=''>No subjects available</option></select>");
+            } else {
+                var div_data = "<select class='form-control' name='subject_data' id='subject_data1'>";
+                div_data += "<option value=''>-- Select Subject --</option>";
+                for (var key in json_data) {
+                    div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['name'] + "</option>";
+                }
+                div_data += "</select>";
+                $("#subject_data").html(div_data);
+            }
+        }).fail(function () {
+            alert("Error in fetching subjects");
+        });
+    });
+
+    $("#manage_result").click(function (e) {
+        e.preventDefault();
+
+        var term_wise = $("#term_wise").val();
+        var course1 = $("#course1").val();
+        var subject = $("#subject_data select").val();
+        if (!term_wise || !course1 || !subject) {
+            alert("Please select Course, Subject, and Term!");
+            return;
+        }
+
+        $("#subject_list").html("<div class='card p-10 text-center text-sm font-semibold text-slate-500'>Filtering results...</div>");
+
+        $.ajax({
+            url: "{% url 'select_termwise' %}",
+            type: 'POST',
+            data: {
+                term_wise: term_wise,
+                course1: course1,
+                subject: subject,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (response) {
+                var results = typeof response === "string" ? JSON.parse(response) : response;
+                if (!results || results.length < 1) {
+                    $("#subject_list").html(`
+                        <div class="card p-10 text-center">
+                            <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
+                                <span class="material-symbols-outlined text-2xl">folder_off</span>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-800">No Results Found</h4>
+                            <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">No student results match the specified course, subject, and term.</p>
+                        </div>`);
+                    return;
+                }
+
+                let div_data = `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-emerald-600">verified</span>
+                            <h3 class="card-title">Filtered Student Results</h3>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
+                            ${results.length} Records Found
+                        </span>
+                    </div>
+
+                    <div class="card-body p-0 overflow-x-auto">
+                        <table id="example2" class="table table-bordered table-hover w-full mb-0 text-sm">
+                            <thead class="bg-slate-50 text-slate-700">
+                                <tr>
+                                    <th class="w-14 text-center">#</th>
+                                    <th>Student Name</th>
+                                    <th>Course</th>
+                                    <th>Subject</th>
+                                    <th class="text-center">Score</th>
+                                    <th class="text-center">Term</th>
+                                    <th class="text-center">Remarks</th>
+                                    <th class="text-center">Exam Type</th>
+                                    <th class="w-40 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">`;
+
+                results.forEach(function (result, index) {
+                    div_data += `
+                        <tr class="hover:bg-slate-50/70 transition-colors">
+                            <td class="text-center font-mono text-slate-400 text-xs">${index + 1}</td>
+                            <td class="font-semibold text-slate-800">${result.student_name}</td>
+                            <td>${result.course}</td>
+                            <td>${result.subject}</td>
+                            <td class="text-center font-bold text-slate-900">${result.test}</td>
+                            <td class="text-center text-xs font-medium text-slate-600">${result.term}</td>
+                            <td class="text-center">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700">
+                                    ${result.remarks || "Recorded"}
+                                </span>
+                            </td>
+                            <td class="text-center text-xs font-medium text-slate-600">${result.exam_type}</td>
+                            <td class="text-center">
+                                <div class="inline-flex items-center gap-1.5">
+                                    <a href="${result.edit_url}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors">
+                                        <span class="material-symbols-outlined text-sm">edit</span>
+                                        <span>Edit</span>
+                                    </a>
+                                    <a href="${result.delete_url}" onclick="return confirm('Are you sure you want to delete this result?');" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors">
+                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                        <span>Delete</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+
+                div_data += `</tbody></table></div></div>`;
+
+                $("#subject_list").html(div_data);
+            },
+            error: function (xhr, status, error) {
+                alert("Error fetching data: " + error);
+            }
+        });
+    });
+});
+</script>
+{% endblock custom_js %}

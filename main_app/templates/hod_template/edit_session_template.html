@@ -1,0 +1,71 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Edit Academic Session{% endblock breadcrumb %}
+{% block page_heading %}{{ page_title }}{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto">
+
+    <!-- Header Action Bar Card -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">calendar_month</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Edit Academic Year</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Update session timeline dates and active academic status.</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'manage_session' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                <span>Back to Sessions</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Container Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 sm:px-8 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-blue-600 text-lg">edit_calendar</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Academic Year Details</span>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium">* Required Fields</span>
+        </div>
+
+        {% include "main_app/form_template.html" with messages=messages form=form button_text="Update Academic Year" %}
+    </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const active = document.getElementById("id_is_active");
+    const start = document.getElementById("id_start_year");
+    const end = document.getElementById("id_end_year");
+
+    if (active) {
+        active.addEventListener("change", function () {
+            if (!this.checked) return;
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            const startDate = new Date(start.value);
+            const endDate = new Date(end.value);
+
+            if (!(today >= startDate && today <= endDate)) {
+                alert("Only the current Academic Year can be set as Active.");
+                this.checked = false;
+            }
+        });
+    }
+});
+</script>
+{% endblock custom_js %}

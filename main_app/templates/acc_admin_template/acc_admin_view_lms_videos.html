@@ -1,0 +1,210 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block custom_css %}
+<!-- Video.js CSS -->
+<link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+<style>
+    /* Youtube-like styling for Video.js */
+    .video-js .vjs-big-play-button {
+        background-color: rgba(255, 0, 0, 0.8);
+        border: none;
+        border-radius: 10px;
+        width: 3em;
+        line-height: 1.5em;
+        height: 1.5em;
+        margin-left: -1.5em;
+        margin-top: -0.75em;
+    }
+    .video-js:hover .vjs-big-play-button,
+    .video-js .vjs-big-play-button:focus {
+        background-color: rgb(255, 0, 0);
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- Filter Area -->
+                    <div class="card-body bg-light border-bottom">
+                        <form method="GET" action="{% url 'acc_admin_view_lms_videos' %}">
+                            <div class="row align-items-end">
+                                <div class="col-md-4">
+                                    <label for="course">Course (Class - Division)</label>
+                                    <select name="course" id="course" class="form-control"
+                                        onchange="fetchSubjects(this.value)">
+                                        <option value="">-- All Courses --</option>
+                                        {% for course in courses %}
+                                        {% if selected_course == course.id %}
+                                        <option value="{{ course.id }}" selected>
+                                            {{ course.name }} - {{ course.division }}
+                                        </option>
+                                        {% else %}
+                                        <option value="{{ course.id }}">
+                                            {{ course.name }} - {{ course.division }}
+                                        </option>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="subject">Subject</label>
+                                    <select name="subject" id="subject" class="form-control">
+                                        <option value="">-- All Subjects --</option>
+                                        <!-- Will be populated by JS -->
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Apply
+                                        Filter</button>
+                                    <a href="{% url 'acc_admin_view_lms_videos' %}" class="btn btn-secondary">Clear</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Subject</th>
+                                    <th>Course</th>
+                                    <th>Uploaded By</th>
+                                    <th>Uploaded</th>
+                                    <th>View</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for video in videos %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ video.title }}</td>
+                                    <td>{{ video.description|truncatewords:10 }}</td>
+                                    <td>{{ video.subject.subject.name }}</td>
+                                    <td>{{ video.course.name }} - {{ video.course.division }}</td>
+                                    <td>{{ video.uploaded_by.first_name }} {{ video.uploaded_by.last_name }}</td>
+                                    <td>{{ video.created_at|date:"d M Y" }}</td>
+                                    <td>
+                                        {% if video.video %}
+                                        <button class="btn btn-info btn-sm play-video-btn" data-video-url="{{ video.video.url }}" data-video-title="{{ video.title }}"><i
+                                                class="fas fa-play"></i> Play</button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">No videos available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Video Modal -->
+<div class="modal fade" id="videoModal" tabindex="-1" role="dialog" aria-labelledby="videoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoModalLabel">Video Player</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <video id="lms-video-player" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" width="100%" height="400" data-setup='{"fluid": true}'>
+                    <p class="vjs-no-js">
+                        To view this video please enable JavaScript, and consider upgrading to a web browser that
+                        <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+                    </p>
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block custom_js %}
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var player = videojs('lms-video-player');
+
+        $('.play-video-btn').on('click', function(e) {
+            e.preventDefault();
+            var videoUrl = $(this).data('video-url');
+            var videoTitle = $(this).data('video-title');
+            
+            $('#videoModalLabel').text(videoTitle || 'Video Player');
+            
+            player.src({ type: 'video/mp4', src: videoUrl });
+            $('#videoModal').modal('show');
+            player.play();
+        });
+
+        $('#videoModal').on('hidden.bs.modal', function () {
+            player.pause();
+            player.currentTime(0);
+        });
+    });
+
+
+    function fetchSubjects(courseId) {
+        var subjectSelect = document.getElementById('subject');
+        var selectedSubjectId = "{{ selected_subject|default:'' }}";
+
+        // Clear current options
+        subjectSelect.innerHTML = '<option value="">-- All Subjects --</option>';
+
+        if (!courseId) return;
+
+        // Fetch subjects for this course
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "{% url 'get_subjects' %}", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+
+        xhr.onreadystatechange = function () {
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                var json = JSON.parse(this.responseText);
+                if (typeof json === 'string') {
+                    json = JSON.parse(json);
+                }
+                json.forEach(function (subject) {
+                    var option = document.createElement("option");
+                    option.text = subject.name;
+                    option.value = subject.id;
+                    if (selectedSubjectId == subject.id) {
+                        option.selected = true;
+                    }
+                    subjectSelect.add(option);
+                });
+            }
+        };
+        xhr.send("course=" + courseId);
+    }
+
+    // Auto-fetch on page load if a course is already selected
+    document.addEventListener("DOMContentLoaded", function () {
+        var courseId = document.getElementById('course').value;
+        if (courseId) {
+            fetchSubjects(courseId);
+        }
+    });
+</script>
+{% endblock custom_js %}

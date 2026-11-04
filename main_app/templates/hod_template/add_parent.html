@@ -1,0 +1,360 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Add Parent{% endblock breadcrumb %}
+{% block page_heading %}{{ page_title }}{% endblock page_heading %}
+
+{% block custom_css %}
+<style>
+    .invalid {
+        font-weight: 600;
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+    .valid {
+        font-weight: 600;
+        color: #10b981;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+    .student-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #4f46e5;
+        color: #ffffff;
+        padding: 0.375rem 0.75rem;
+        border-radius: 9999px;
+        margin: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(79, 70, 229, 0.2);
+    }
+    .student-tag .remove-btn {
+        cursor: pointer;
+        font-size: 1rem;
+        line-height: 1;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+    .student-tag .remove-btn:hover {
+        opacity: 1;
+    }
+    .students-container {
+        border: 1px dashed #cbd5e1;
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+        min-height: 50px;
+        background-color: #f8fafc;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .search-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-height: 220px;
+        overflow-y: auto;
+        display: none;
+        margin-top: 0.25rem;
+    }
+    .suggestion-item {
+        padding: 0.625rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.8125rem;
+        color: #1e293b;
+        transition: background-color 0.15s;
+    }
+    .suggestion-item:hover {
+        background-color: #f8fafc;
+        color: #4f46e5;
+    }
+    .search-wrapper {
+        position: relative;
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto">
+
+    <!-- Header Action Bar Card -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">family_restroom</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Parent Profile Registration</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Register a guardian profile and link them to their wards / students.</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'manage_parent' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                <span>Back to Parents</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Container Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 sm:px-8 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-violet-600 text-lg">person_add</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Guardian Registration Form</span>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium">* Required Fields</span>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" id="parentForm" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="p-6 sm:p-8 space-y-6">
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <!-- Dynamic Form Fields Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                    {% for field in form %}
+                        {% if field.name != 'course' and field.name != 'students' %}
+                        <div class="form-group flex flex-col {% if field.field.widget.input_type == 'textarea' or field.name == 'address' %}md:col-span-2{% endif %}">
+                            <label for="{{ field.id_for_label }}" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                                {{ field.label }}
+                                {% if field.field.required %}<span class="text-rose-500 font-bold ml-0.5">*</span>{% endif %}
+                            </label>
+                            {% if field.errors %}
+                            <div class="mb-1 text-xs font-semibold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-100 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">warning</span>
+                                <span>{{ field.errors|striptags }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="relative">
+                                {{ field }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Course Selector -->
+                    <div class="form-group flex flex-col md:col-span-2">
+                        <label for="{{ form.course.id_for_label }}" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Filter Students by Course:
+                        </label>
+                        <div class="relative">
+                            {{ form.course }}
+                        </div>
+                        <span class="text-[11px] text-slate-400 mt-1">Select a course to search for students enrolled in that class.</span>
+                    </div>
+
+                    <!-- Students Autocomplete Search -->
+                    <div class="form-group flex flex-col md:col-span-2">
+                        <label for="studentSearch" class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Link Students (Wards): <span class="text-rose-500 font-bold">*</span>
+                        </label>
+                        <div class="search-wrapper">
+                            <input type="text" id="studentSearch" class="form-control" placeholder="Type student name or admission number to search..." autocomplete="off">
+                            <div class="search-suggestions" id="suggestions"></div>
+                        </div>
+                        <span class="text-[11px] text-slate-400 mt-1">Type student name or admission number, then click the suggestion to link them.</span>
+                    </div>
+
+                    <!-- Selected Students Container -->
+                    <div class="form-group flex flex-col md:col-span-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Selected Linked Students:
+                        </label>
+                        <div class="students-container" id="selectedStudents">
+                            <span class="text-xs text-slate-400 italic" id="emptyPlaceholder">No students selected yet. Search above to add.</span>
+                        </div>
+                    </div>
+
+                    <!-- Hidden Field to store selected student IDs -->
+                    <input type="hidden" id="selectedStudentIds" name="students" value="">
+
+                </div>
+
+            </div>
+
+            <!-- Form Actions -->
+            <div class="px-6 py-4 sm:px-8 sm:py-5 bg-slate-50/80 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <button type="button" onclick="window.history.back()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-100 transition-colors flex items-center justify-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">arrow_back</span>
+                    <span>Cancel</span>
+                </button>
+
+                <button type="submit" class="w-full sm:w-auto px-8 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 hover:scale-[1.01]">
+                    <span class="material-symbols-outlined text-base">check_circle</span>
+                    <span>Add Parent Profile</span>
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+let allAvailableStudents = [];
+let selectedStudents = new Map();
+
+document.addEventListener('DOMContentLoaded', function() {
+    const courseSelect = document.getElementById('id_course');
+    const studentSearchInput = document.getElementById('studentSearch');
+    const suggestionsDiv = document.getElementById('suggestions');
+    const selectedStudentsDiv = document.getElementById('selectedStudents');
+    const hiddenInput = document.getElementById('selectedStudentIds');
+    const emptyPlaceholder = document.getElementById('emptyPlaceholder');
+
+    if (courseSelect) {
+        courseSelect.addEventListener('change', function() {
+            const courseId = this.value;
+            allAvailableStudents = [];
+            studentSearchInput.value = '';
+            suggestionsDiv.innerHTML = '';
+            
+            if (!courseId) return;
+            
+            fetch(`/ajax/get-students-by-course/?course_id=${encodeURIComponent(courseId)}`)
+                .then(response => response.json())
+                .then(data => {
+                    allAvailableStudents = data.students || [];
+                })
+                .catch(error => console.error('Error fetching students:', error));
+        });
+    }
+
+    if (studentSearchInput) {
+        studentSearchInput.addEventListener('input', function() {
+            const searchValue = this.value.toLowerCase().trim();
+            suggestionsDiv.innerHTML = '';
+            
+            if (!searchValue || searchValue.length < 1) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            const filtered = allAvailableStudents.filter(student => {
+                const name = (student.name || '').toLowerCase();
+                const admission = (student.admission_number || '').toLowerCase();
+                return !selectedStudents.has(student.id) && 
+                       (name.includes(searchValue) || admission.includes(searchValue));
+            });
+            
+            if (filtered.length > 0) {
+                suggestionsDiv.style.display = 'block';
+                filtered.forEach(student => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.innerHTML = `<strong>${student.name}</strong> (${student.admission_number})`;
+                    div.onclick = () => addStudent(student);
+                    suggestionsDiv.appendChild(div);
+                });
+            } else {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', function(event) {
+            if (event.target !== studentSearchInput && !suggestionsDiv.contains(event.target)) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+    }
+
+    function addStudent(student) {
+        if (!selectedStudents.has(student.id)) {
+            selectedStudents.set(student.id, student);
+            renderSelectedStudents();
+            updateHiddenInput();
+            studentSearchInput.value = '';
+            suggestionsDiv.innerHTML = '';
+            suggestionsDiv.style.display = 'none';
+        }
+    }
+
+    window.removeStudent = function(studentId) {
+        selectedStudents.delete(studentId);
+        renderSelectedStudents();
+        updateHiddenInput();
+    }
+
+    function renderSelectedStudents() {
+        selectedStudentsDiv.innerHTML = '';
+        if (selectedStudents.size === 0) {
+            selectedStudentsDiv.innerHTML = '<span class="text-xs text-slate-400 italic">No students selected yet. Search above to add.</span>';
+            return;
+        }
+        selectedStudents.forEach((student) => {
+            const tag = document.createElement('div');
+            tag.className = 'student-tag';
+            tag.innerHTML = `${student.name} (${student.admission_number})
+                <span class="remove-btn" onclick="removeStudent(${student.id})" title="Remove">×</span>`;
+            selectedStudentsDiv.appendChild(tag);
+        });
+    }
+
+    function updateHiddenInput() {
+        const ids = Array.from(selectedStudents.keys());
+        hiddenInput.value = ids.join(',');
+    }
+
+    document.getElementById('parentForm').addEventListener('submit', function(e) {
+        if (selectedStudents.size === 0) {
+            e.preventDefault();
+            alert('Please add at least one student.');
+            return false;
+        }
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Adding Parent Profile...';
+        }
+    });
+});
+
+function validateEmail(email) {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
+
+$(document).ready(function(){
+    $("#id_email").keyup(function(){
+        var email = $(this).val();
+        if (validateEmail(email)){
+            $.ajax({
+                url: "{% url 'check_email_availability' %}",
+                type: 'POST',
+                data:{email:email}
+            }).done(function(response){
+                $(".email_error").remove();
+                if (response == "True"){
+                    $("<span class='invalid email_error'>Email Address Already Exists</span>").insertAfter("#id_email");
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock custom_js %}

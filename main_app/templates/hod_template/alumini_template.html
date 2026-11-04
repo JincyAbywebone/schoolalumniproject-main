@@ -1,0 +1,201 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Add Alumni Member{% endblock breadcrumb %}
+{% block page_heading %}{{ page_title }}{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto">
+
+    <!-- Header Action Bar Card -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">diversity_3</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Add Alumni Member</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Register a former student into the institutional alumni network.</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'manage_alumini' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                <span>Back to Alumni Directory</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Container Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 sm:px-8 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-purple-600 text-lg">person_add</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Alumni Registration Details</span>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium">* Required Fields</span>
+        </div>
+
+        {% include "main_app/form_template.html" with messages=messages form=form button_text="Add Alumni Member" %}
+    </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    $(document).ready(function(){
+        let checkbox = document.getElementById("id_same_as_permanent");
+        let permLocality = document.getElementById("id_street_address");
+        let permCity = document.getElementById("id_city");
+        let permDistrict = document.getElementById("id_district_name");
+        let permState = document.getElementById("id_state");
+        let currLocality = document.getElementById("id_current_street_address");
+        let currCity = document.getElementById("id_current_city");
+        let currDistrict = document.getElementById("id_current_district_name");
+        let currState = document.getElementById("id_current_state");
+
+        function toggleCurrentAddress() {
+            if (!checkbox) return;
+            if (checkbox.checked) {
+                if (currLocality && permLocality) { currLocality.value = permLocality.value; currLocality.readOnly = true; }
+                if (currDistrict && permDistrict) { currDistrict.value = permDistrict.value; currDistrict.readOnly = true; }
+                if (currState && permState) { currState.value = permState.value; currState.readOnly = true; }
+                if (currCity && permCity) { currCity.value = permCity.value; currCity.readOnly = true; }
+            } else {
+                if (currLocality) { currLocality.value = ""; currLocality.readOnly = false; }
+                if (currDistrict) { currDistrict.value = ""; currDistrict.readOnly = false; }
+                if (currState) { currState.value = ""; currState.readOnly = false; }
+                if (currCity) { currCity.value = ""; currCity.readOnly = false; }
+            }
+        }
+
+        if (checkbox) {
+            checkbox.addEventListener("change", toggleCurrentAddress);
+        }
+    }); 
+
+    // Replace period-of-study mask with two selects (`start_year`, `end_year`) and client-side validation
+    $(document).ready(function(){
+        (function(){
+            var startSel = document.getElementById('id_start_year');
+            var endSel = document.getElementById('id_end_year');
+            var hidden = document.getElementById('id_period_of_study');
+            if(!startSel || !endSel || !hidden) return;
+
+            function showYearError(msg){
+                var err = document.getElementById('period_select_error');
+                if(!err){
+                    err = document.createElement('div');
+                    err.id = 'period_select_error';
+                    err.className = 'text-rose-500 font-semibold text-xs mt-1';
+                    endSel.parentNode.insertBefore(err, endSel.nextSibling);
+                }
+                err.innerHTML = msg;
+                err.style.display = 'block';
+            }
+            function hideYearError(){
+                var err = document.getElementById('period_select_error');
+                if(err) err.style.display = 'none';
+            }
+
+            function filterEndOptions(){
+                var s = startSel.value;
+                if(!s){
+                    for(var i=0;i<endSel.options.length;i++){
+                        endSel.options[i].disabled = false;
+                    }
+                    return;
+                }
+                var si = parseInt(s,10);
+                var chosen = endSel.value;
+                var chosenInt = chosen ? parseInt(chosen,10) : null;
+                var firstValidIndex = null;
+                for(var i=0;i<endSel.options.length;i++){
+                    var opt = endSel.options[i];
+                    if(!opt.value) continue;
+                    var val = parseInt(opt.value,10);
+                    if(val < si){
+                        opt.disabled = true;
+                    } else {
+                        opt.disabled = false;
+                        if(firstValidIndex === null) firstValidIndex = i;
+                    }
+                }
+                if(chosenInt !== null && chosenInt < si){
+                    if(firstValidIndex !== null){ endSel.selectedIndex = firstValidIndex; }
+                }
+            }
+
+            function validateAndSetHidden(){
+                var s = startSel.value;
+                var e = endSel.value;
+                var current = new Date().getFullYear();
+                if(!s && !e){ hidden.value = ''; hideYearError(); startSel.classList.remove('is-invalid'); endSel.classList.remove('is-invalid'); return true; }
+                if(!s || !e){
+                    showYearError('Please select both start and end year.');
+                    if(!s) startSel.classList.add('is-invalid'); else startSel.classList.remove('is-invalid');
+                    if(!e) endSel.classList.add('is-invalid'); else endSel.classList.remove('is-invalid');
+                    return false;
+                }
+                var si = parseInt(s,10), ei = parseInt(e,10);
+                if(si > current){
+                    showYearError('Start year cannot be after current year ('+current+').');
+                    startSel.classList.add('is-invalid');
+                    return false;
+                }
+                if(ei < si){
+                    showYearError('End year must be the same as or after start year.');
+                    endSel.classList.add('is-invalid');
+                    return false;
+                }
+                hidden.value = si + '-' + ei;
+                hideYearError();
+                startSel.classList.remove('is-invalid');
+                endSel.classList.remove('is-invalid');
+                return true;
+            }
+
+            startSel.addEventListener('change', function(){
+                filterEndOptions();
+                validateAndSetHidden();
+                if(!endSel.value){
+                    showYearError('Please select end year.');
+                    endSel.classList.add('is-invalid');
+                }
+            });
+
+            endSel.addEventListener('change', function(){
+                validateAndSetHidden();
+                if(!startSel.value){
+                    showYearError('Please select start year.');
+                    startSel.classList.add('is-invalid');
+                }
+            });
+
+            endSel.addEventListener('focus', function(){
+                if(!startSel.value){
+                    showYearError('Please select start year first.');
+                    startSel.classList.add('is-invalid');
+                }
+            });
+            startSel.addEventListener('focus', function(){
+                if(!endSel.value){
+                    endSel.classList.remove('is-invalid');
+                }
+            });
+
+            filterEndOptions();
+            validateAndSetHidden();
+
+            var theForm = startSel.closest('form');
+            if(theForm){
+                theForm.addEventListener('submit', function(e){
+                    if(!validateAndSetHidden()){ e.preventDefault(); startSel.focus(); }
+                });
+            }
+        })();
+    });
+</script>
+{% endblock custom_js %}

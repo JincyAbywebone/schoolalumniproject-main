@@ -1,0 +1,159 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Students Directory{% endblock breadcrumb %}
+{% block page_heading %}Student Management &amp; Directory{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Action Bar Card -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">school</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Enrolled Students Roster</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Search, review admissions, update student details, or manage roll numbers.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <a href="{% url 'add_student' %}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-indigo-600/20 transition-all hover:scale-105">
+                <span class="material-symbols-outlined text-base">person_add</span>
+                <span>+ Add New Student</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Filter Ribbon -->
+    <div class="p-4 rounded-xl bg-white border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <form method="GET" action="{% url 'students_list' %}" class="flex-1 flex items-center gap-2 max-w-lg">
+            <div class="relative flex-1">
+                <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-lg">search</span>
+                <input type="text" name="q" class="w-full bg-slate-50 text-slate-800 placeholder-slate-400 text-xs rounded-xl pl-9 pr-3 py-2.5 border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all" placeholder="Search by student name or admission number..." value="{{ request.GET.q }}">
+            </div>
+            <button type="submit" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs transition-colors shrink-0">
+                Search
+            </button>
+            {% if request.GET.q %}
+            <a href="{% url 'manage_student' %}" class="px-3 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-medium transition-colors shrink-0">
+                Clear
+            </a>
+            {% endif %}
+        </form>
+
+        <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
+            <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold font-mono">
+                {{ students|length }} Student{{ students|length|pluralize }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Modern Data Table Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-4 w-12 text-center">#</th>
+                        <th class="py-3.5 px-4">Student Profile</th>
+                        <th class="py-3.5 px-4">Email Address</th>
+                        <th class="py-3.5 px-4">Gender</th>
+                        <th class="py-3.5 px-4">Course &amp; Division</th>
+                        <th class="py-3.5 px-4 text-center">Photo</th>
+                        <th class="py-3.5 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-700">
+                    {% for student in students %}
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-3.5 px-4 text-center font-mono text-slate-400 font-semibold">
+                            {{ forloop.counter }}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-3">
+                                {% if student.profile_pic %}
+                                    <img src="{{ student.profile_pic.url }}" alt="Avatar" class="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200 shrink-0">
+                                {% else %}
+                                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white font-bold text-xs flex items-center justify-center uppercase shrink-0">
+                                        {{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}
+                                    </div>
+                                {% endif %}
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-900">{{ student.first_name }} {{ student.last_name }}</span>
+                                    <span class="text-[11px] text-slate-400">Student ID: #{{ student.student.id }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 font-mono text-slate-600">
+                            {{ student.email }}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if student.gender == 'Male' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                                    Male
+                                </span>
+                            {% elif student.gender == 'Female' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-100">
+                                    Female
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">
+                                    {{ student.gender|default:"Not Set" }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                <span class="material-symbols-outlined text-sm">auto_stories</span>
+                                <span>{{ student.student.course|default:"Unassigned" }}</span>
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            {% if student.profile_pic %}
+                                <a href="{{ student.profile_pic.url }}" target="_blank" class="inline-block hover:opacity-80 transition-opacity">
+                                    <img src="{{ student.profile_pic.url }}" alt="Avatar" class="w-10 h-10 rounded-lg object-cover mx-auto ring-1 ring-slate-200">
+                                </a>
+                            {% else %}
+                                <span class="text-[11px] text-slate-400 italic">No Photo</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="inline-flex items-center gap-1.5 justify-end">
+                                <a href="{% url 'edit_student' student.student.id %}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs transition-colors" title="Edit Student">
+                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                    <span>Edit</span>
+                                </a>
+                                <a href="{% url 'delete_student' student.student.id %}" onclick="return confirm('Are you sure you want to delete this student record? This cannot be undone!')" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs transition-colors" title="Delete Student">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                    <span>Delete</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="py-12 text-center">
+                            <div class="flex flex-col items-center justify-center space-y-3">
+                                <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                    <span class="material-symbols-outlined text-3xl">school</span>
+                                </div>
+                                <div class="text-sm font-bold text-slate-700">No Student Records Found</div>
+                                <p class="text-xs text-slate-400 max-w-sm">No students found matching your criteria. Try adjusting your search query or add a new student.</p>
+                                <a href="{% url 'add_student' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold text-xs shadow-sm hover:bg-indigo-700 transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                    <span>Add First Student</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock content %}

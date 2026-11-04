@@ -1,0 +1,100 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+
+        <style>
+          table { border-collapse: collapse; width: 100%; }
+          td, th { border: 1px solid #ccc; padding: 6px; text-align: center; }
+          th { background-color: #f3f3f3; }
+        </style>
+
+        <form method="get">
+          {% csrf_token %}
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">{{ page_title }}</h3>
+            </div>
+            <div class="card-body">
+
+                           <div class="form-group">
+    <label>Session</label>
+
+    <select class="form-control" id="session_select" name="session_select">
+        {% if sessions %}
+            <option value="{{ sessions.id }}" selected>
+                {{ sessions.start_year }} - {{ sessions.end_year }}
+            </option>
+        {% else %}
+            <option value="">No Active Session</option>
+        {% endif %}
+    </select>
+</div>
+              <div class="form-group">
+                <label>Class:</label>
+                <select name="course" onchange="this.form.submit()" class="form-control">
+                  <option value="">-- Select Class --</option>
+                  {% for c in courses %}
+                    <option value="{{ c.id }}" {% if c.id|stringformat:"s" == selected_course|stringformat:"s" %}selected{% endif %}>{{ c }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              {% if subjects %}
+              <div class="form-group">
+                <label>Subject:</label>
+                <select name="subject" onchange="this.form.submit()" class="form-control">
+                  <option value="">-- Select Subject --</option>
+                  {% for s in subjects %}
+                   <option value="{{ s.id }}" {% if s.id|stringformat:"s" == selected_subject|stringformat:"s" %}selected{% endif %}>{{ s.subject.name }}</option>
+                   {% comment %} <option value="{{ s.id }}" {% if s.id|stringformat:"s" == selected_subject|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option> {% endcomment %}
+                  {% endfor %}
+                </select>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </form>
+
+        {% if all_data %}
+        <br>
+       <table>
+  <thead>
+    <tr>
+      <th>Student</th>
+      {% for col in exam_columns %}
+        <th>{{ col }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in all_data %}
+      <tr>
+        <td>{{ row.student.admin.get_full_name|default:row.student.admin.first_name }}</td>
+        {% for col in exam_columns %}
+          <td>{{ row.marks|dict_get:col|default:"–" }}</td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+        {% elif selected_course and selected_subject %}
+          <p><i>No results available for the selected class and subject.</i></p>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+  
+  // Add your JavaScript here
+</script>
+{% endblock %}

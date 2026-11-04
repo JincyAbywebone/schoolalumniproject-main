@@ -1,0 +1,214 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<style>
+    /* Global Card Animations */
+    .animate-card {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .animate-delay-1 {
+        animation-delay: 0.1s;
+    }
+
+    .animate-delay-2 {
+        animation-delay: 0.2s;
+    }
+
+    .animate-delay-3 {
+        animation-delay: 0.3s;
+    }
+
+    .animate-delay-4 {
+        animation-delay: 0.4s;
+    }
+
+    .animate-delay-5 {
+        animation-delay: 0.5s;
+    }
+
+    /* Keyframes */
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Batch Card Styling & Interactions */
+    .batch-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        /* Subtle border */
+    }
+
+    .batch-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08) !important;
+        /* Stronger shadow on hover */
+        border-left: 4px solid #0056b3 !important;
+        /* Darker blue on hover */
+    }
+
+    /* Chevron Rotation (Optional if we add it later) */
+    .rotate-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .collapsed .rotate-icon {
+        transform: rotate(-90deg);
+    }
+
+    /* Student List Animation */
+    .student-table-row {
+        opacity: 0;
+        animation: fadeIn 0.4s ease-in forwards;
+    }
+
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+
+                {% if history %}
+                {% for item in history %}
+                <!-- Level 1: Session (Expanded by default) -->
+                <div class="card card-primary card-outline mb-3 animate-card animate-delay-{{ forloop.counter }}">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-calendar-alt mr-2"></i> Academic Year:
+                            <strong>
+                                {{ item.session.start_year|date:"Y" }} - {{ item.session.end_year|date:"Y" }}
+                            </strong>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Level 2: Batches (Collapsed by default) -->
+                        <div id="accordion_{{ item.session.id }}">
+                            {% for batch in item.batches %}
+                            <div class="card mb-2 shadow-sm border-0">
+                                <div class="card-body p-0">
+                                    <div class="d-flex justify-content-between align-items-center p-3 batch-card"
+                                        type="button" data-toggle="collapse"
+                                        data-target="#collapse_{{ item.session.id }}_{{ forloop.counter }}"
+                                        aria-expanded="false"
+                                        aria-controls="collapse_{{ item.session.id }}_{{ forloop.counter }}"
+                                        style="cursor: pointer; background-color: #fff; border-radius: 5px; border-left: 4px solid #17a2b8;">
+
+                                        <!-- Left Side: Course Info -->
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-chalkboard-teacher text-info mr-3"
+                                                style="font-size: 1.2rem;"></i>
+                                            <h5 class="mb-0 text-dark">
+                                                <strong>Class {{ batch.from_course.name }}</strong>
+                                                <span class="text-muted" style="font-size: 0.9em;">
+                                                    ({{ batch.from_course.division }})
+                                                </span>
+                                                <i class="fas fa-long-arrow-alt-right mx-3 text-muted"></i>
+                                                <strong>Class {{ batch.to_course.name }}</strong>
+                                                <span class="text-muted" style="font-size: 0.9em;">
+                                                    ({{ batch.to_course.division }})
+                                                </span>
+                                            </h5>
+                                        </div>
+
+                                        <!-- Right Side: Badge -->
+                                        <div>
+                                            <span class="badge badge-info p-2"
+                                                style="font-size: 0.9rem; min-width: 100px;">
+                                                {{ batch.count }} Students
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Collapsible Content -->
+                                    <div id="collapse_{{ item.session.id }}_{{ forloop.counter }}" class="collapse"
+                                        aria-labelledby="heading_{{ item.session.id }}_{{ forloop.counter }}"
+                                        data-parent="#accordion_{{ item.session.id }}">
+                                        <div class="card-body bg-light border-top">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <small class="text-muted"><i class="fas fa-calendar-check mr-1"></i>
+                                                    Promoted On: <strong>
+                                                        {{ batch.promoted_on|date:"d M Y" }}
+                                                    </strong></small>
+                                                {% if batch.students %}
+                                                <a href="{% url 'export_promotion_pdf' item.session.id batch.students.0.to_session.id batch.from_course.id batch.to_course.id %}"
+                                                    class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-file-pdf mr-1"></i> Export PDF
+                                                </a>
+                                                {% endif %}
+                                            </div>
+
+                                            <h6 class="text-primary border-bottom pb-2">Student List</h6>
+                                            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                                <table class="table table-sm table-hover bg-white">
+                                                    <thead class="thead-light">
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th>Admission No.</th>
+                                                            <th>Student Name</th>
+                                                            <th class="text-right">Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for promo in batch.students %}
+                                                        <tr class="student-table-row"
+                                                            style="animation-delay: {% widthratio forloop.counter 1 100 %}ms;">
+                                                            <td>{{ forloop.counter }}</td>
+                                                            <td>{{ promo.student.admission_number|default:"N/A" }}</td>
+                                                            <td>
+                                                                {{ promo.student.admin.first_name }}
+                                                                {{ promo.student.admin.last_name }}
+                                                            </td>
+                                                            <td class="text-right">
+                                                                <a href="{% url 'promotion_detail' promo.id %}"
+                                                                    class="btn btn-sm btn-info" title="View Details">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                                <a href="{% url 'undo_promotion' promo.id %}"
+                                                                    class="btn btn-sm btn-danger ml-1"
+                                                                    title="Revert Promotion"
+                                                                    onclick="return confirm('Are you sure you want to revert this promotion for {{ promo.student.admin.first_name }}? They will be moved back to the previous class.')">
+                                                                    <i class="fas fa-undo"></i>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <!-- End Level 2 -->
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="card card-default">
+                    <div class="card-body text-center">
+                        <h4 class="text-muted"><i class="fas fa-info-circle mr-2"></i> No Promotion History Found</h4>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

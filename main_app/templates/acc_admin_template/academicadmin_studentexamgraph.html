@@ -1,0 +1,220 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block content %}
+
+<div class="container mt-4">
+  {% comment %} <form method="GET" class="mb-4"> {% endcomment %}
+    <div class="row">
+      <div class="col-md-4">
+        <select name="course" id="course" required class="form-control">
+          <option value="">-- Select Course & Division --</option>
+          {% for course in courses %}
+          <option value="{{ course.id }}" {% if course.id|stringformat:'s' == selected_course %}selected{% endif %}>
+            {{ course.name }} - {{ course.division }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+ <div class="col-md-4">
+  <select name="student_data" id="student_data" class="form-control">
+    <option value="">Select Student</option>
+    {% for students in student %}
+      <option value="{{ students.id }}" {% if students.id|stringformat:'s' == selected_student %}selected{% endif %}>
+        {{ students.name }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+
+      <div class="col-md-4">
+        <select name="subject_data_value" id="subject_data_value" class="form-control">
+          <option value="">Select Exam</option>
+          {% for exam in exams %}
+          <option value="{{ exam.id }}">{{ exam.exam_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+     
+
+      <div class="col-md-2 mt-3">
+        <button type="button" id="student_graphdata" class="btn btn-primary w-100">View Graph</button>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-md-12">
+   <canvas id="marksGraph" width="900" height="400"></canvas>
+   
+      </div>
+
+    </div>
+  {% comment %} </form> {% endcomment %}
+</div>
+<div class="mt-4">
+  <h5>Performance Legend</h5>
+  <div class="row">
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#071489ff;"></span> Outstanding (≥ 95%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#d32ccdff;"></span> Excellent (≥ 90%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#146b0cff;"></span> Very Good (≥ 85%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#28e141ff;"></span> Good (≥ 80%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#ffc107;"></span> Satisfactory (≥ 70%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#e3d10cff;"></span> Average (≥ 60%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#e0731aff;"></span> Below Average (≥ 50%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#f6061eff;"></span> Need Improvement (< 50%)</div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function () {
+     $('#student_graphdata').click(function (e) {
+        e.preventDefault(); 
+        loadGraph();        
+    });
+    // Load subjects based on selected course
+    $('#course').change(function () {
+    var course = $(this).val();
+    $('#student_data').html('<option value="">Select Student</option>');
+
+    if (!course) {
+        alert('Please select a course');
+        return;
+    }
+
+    $.ajax({
+        url: '{% url "get_student" %}',  // Django URL
+        type: 'POST',
+        data: {
+            course: course,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function (response) {
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+
+            if (response.length < 1) {
+                alert('No students available for this course');
+                return;
+            }
+
+            var options = '<option value="">Select Student</option>';
+            response.forEach(function (item) {
+                options += `<option value="${item.id}">${item.name}</option>`;
+            });
+            $('#student_data').html(options);
+        },
+        error: function () {
+            alert('Error loading students');
+        }
+    });
+});
+
+
+});
+    
+ const maxMarks = {{ max_marks|default:20 }};
+function loadGraph() {
+    const studentId = document.getElementById('student_data').value;
+    const examId = document.getElementById('subject_data_value').value;
+
+    if (!studentId || !examId) {
+        alert("Please select both student and exam");
+        return;
+    }
+
+    fetch(`/admin/get_student_bargraph/?student_id=${studentId}&subject_id=${examId}`)
+        .then(response => response.json())
+        .then(data => {
+            const subjects = data.data.map(item => item.subject);
+            const marks = data.data.map(item => item.marks);
+         //   const maxMarks = data.max_marks || 100; // fallback in case value missing
+             const maxMarks = {{ max_marks|default:20 }};
+            const backgroundColors = marks.map(mark => {
+                let percentage = (mark / maxMarks) * 100;
+                if (percentage >= 95) return '#071489ff';       // Outstanding
+                if (percentage >= 90) return '#d32ccdff';       // Excellent
+                if (percentage >= 85) return '#146b0cff';       // Very Good
+                if (percentage >= 80) return '#28e141ff';       // Good
+                if (percentage >= 70) return '#ffc107';       // Satisfactory
+                if (percentage >= 60) return '#e3d10cff';       // Average
+                if (percentage >= 50) return '#e0731aff';       // Below Average
+                return '#f6061eff';                             // Need Improvement
+            });
+
+            const ctx = document.getElementById('marksGraph').getContext('2d');
+            if (window.myChart) window.myChart.destroy();
+
+            window.myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: subjects,
+                    datasets: [{
+                        label: `Marks (out of ${maxMarks})`,
+                        data: marks,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Marks for Selected Exam'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const mark = context.raw;
+                                    let percentage = (mark / maxMarks) * 100;
+                                    let label = "";
+
+                                    if (percentage >= 95) label = "Outstanding";
+                                    else if (percentage >= 90) label = "Excellent";
+                                    else if (percentage >= 85) label = "Very Good";
+                                    else if (percentage >= 80) label = "Good";
+                                    else if (percentage >= 70) label = "Satisfactory";
+                                    else if (percentage >= 60) label = "Average";
+                                    else if (percentage >= 50) label = "Below Average";
+                                    else label = "Need Improvement";
+
+                                    return `${mark} Marks (${label})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Marks'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Subjects'
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Failed to load marks data.");
+        });
+}
+</script>
+{% endblock custom_js %}

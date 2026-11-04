@@ -1,0 +1,162 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- Filter Area -->
+                    <div class="card-body bg-light border-bottom">
+                        <form method="GET" action="{% url 'acc_admin_view_lms_notes' %}">
+                            <div class="row align-items-end">
+                                <div class="col-md-4">
+                                    <label for="course">Course (Class - Division)</label>
+                                    <select name="course" id="course" class="form-control"
+                                        onchange="fetchSubjects(this.value)">
+                                        <option value="">-- All Courses --</option>
+                                        {% for course in courses %}
+                                        {% if selected_course == course.id %}
+                                        <option value="{{ course.id }}" selected>
+                                            {{ course.name }} - {{ course.division }}
+                                        </option>
+                                        {% else %}
+                                        <option value="{{ course.id }}">
+                                            {{ course.name }} - {{ course.division }}
+                                        </option>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="subject">Subject</label>
+                                    <select name="subject" id="subject" class="form-control">
+                                        <option value="">-- All Subjects --</option>
+                                        <!-- Will be populated by JS -->
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Apply
+                                        Filter</button>
+                                    <a href="{% url 'acc_admin_view_lms_notes' %}" class="btn btn-secondary">Clear</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Title</th>
+                                    <th>Content Preview</th>
+                                    <th>Subject</th>
+                                    <th>Course</th>
+                                    <th>Attachment</th>
+                                    <th>Uploaded By</th>
+                                    <th>Uploaded</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for note in notes %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ note.title }}</td>
+                                    <td>{{ note.content|truncatewords:15 }}</td>
+                                    <td>{{ note.subject.subject.name }}</td>
+                                    <td>{{ note.course.name }} - {{ note.course.division }}</td>
+                                    <td>
+                                        {% if note.file %}
+                                        <a href="{{ note.file.url }}" target="_blank"
+                                            class="btn btn-info btn-sm view-doc-btn" data-url="{{ note.file.url }}"
+                                            title="View Document"><i class="fas fa-eye"></i> View</a>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ note.uploaded_by.first_name }} {{ note.uploaded_by.last_name }}</td>
+                                    <td>{{ note.created_at|date:"d M Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">No notes available.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    function fetchSubjects(courseId) {
+        var subjectSelect = document.getElementById('subject');
+        var selectedSubjectId = "{{ selected_subject|default:'' }}";
+
+        // Clear current options
+        subjectSelect.innerHTML = '<option value="">-- All Subjects --</option>';
+
+        if (!courseId) return;
+
+        // Fetch subjects for this course
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "{% url 'get_subjects' %}", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+
+        xhr.onreadystatechange = function () {
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                var json = JSON.parse(this.responseText);
+                if (typeof json === 'string') {
+                    json = JSON.parse(json);
+                }
+                json.forEach(function (subject) {
+                    var option = document.createElement("option");
+                    option.text = subject.name;
+                    option.value = subject.id;
+                    if (selectedSubjectId == subject.id) {
+                        option.selected = true;
+                    }
+                    subjectSelect.add(option);
+                });
+            }
+        };
+        xhr.send("course=" + courseId);
+    }
+
+    // Auto-fetch on page load if a course is already selected
+    document.addEventListener("DOMContentLoaded", function () {
+        var courseId = document.getElementById('course').value;
+        if (courseId) {
+            fetchSubjects(courseId);
+        }
+
+        // Setup Microsoft Web Viewer routing for Office docs
+        var viewBtns = document.querySelectorAll('.view-doc-btn');
+        viewBtns.forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                var url = this.getAttribute('data-url');
+                var ext = url.split('.').pop().toLowerCase();
+                var officeExts = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'];
+
+                if (officeExts.includes(ext)) {
+                    e.preventDefault();
+                    var fullUrl = window.location.origin + url;
+                    var viewerUrl = 'https://view.officeapps.live.com/op/view.aspx?src=' + encodeURIComponent(fullUrl);
+                    window.open(viewerUrl, '_blank');
+                }
+            });
+        });
+    });
+</script>
+{% endblock custom_js %}

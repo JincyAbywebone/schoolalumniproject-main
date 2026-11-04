@@ -1,0 +1,66 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                   
+
+                    <div class="card-body">
+                        <!-- Search form that redirects to alumni list page -->
+            
+
+                        <!-- Main alumni table -->
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Course</th>
+                                    <th>Subject</th>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Notes</th>
+                                    <th>Image</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in lesson_notes %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ data.curriculam.course.name }}-{{ data.curriculam.course.division}}</td>
+                                    <td>{{ data.subject.subject.name }}</td>
+                                    <td>{{ data.curriculam.title }}</td>
+                                    <td>{{ data.date }}</td>
+                                    <td>{{ data.notes }}</td>
+                                    <td>
+                                        {% if data.image %}
+                                            <img class="img img-fluid mb-2" height="100" width="100" src="{{ data.image.url }}" alt="">
+                                        {% else %}
+                                            No Image
+                                        {% endif %}
+                                    </td>
+                                    
+                                     <td>
+                                        <a href="{% url 'edit_lesson_note' data.id %}" class="btn btn-primary">Edit</a>
+                                        <a href="{% url 'delete_lesson_note' data.id %}" class="btn btn-danger" onclick="return confirm('Are you sure about this ?')">Delete</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div> <!-- card-body -->
+                </div> <!-- card -->
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+
+

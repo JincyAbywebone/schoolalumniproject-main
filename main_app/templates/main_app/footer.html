@@ -1,0 +1,18 @@
+{% load static %}
+<footer class="mt-auto py-5 px-4 lg:px-8 border-t border-slate-200/80 bg-white/70 backdrop-blur-sm text-sm text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-700">iMentor SMS</span>
+        <span>&copy; {% now "Y" %} Core Institutional Suite. All rights reserved.</span>
+    </div>
+    <div class="flex items-center gap-4 text-xs">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-medium border border-emerald-200/50">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            System Online
+        </span>
+        <span class="text-slate-400">|</span>
+        <a href="{% url 'user_logout' %}" class="text-rose-600 hover:text-rose-700 font-semibold transition-colors flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">logout</span>
+            <span>Sign Out</span>
+        </a>
+    </div>
+</footer>

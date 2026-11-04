@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<style>
+
+@page{
+    size:A4 portrait;
+    margin:18mm;
+}
+
+body{
+    font-family:"Times New Roman",serif;
+    font-size:14px;
+    color:#000;
+}
+
+.page{
+    page-break-after:always;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+td{
+    padding:5px;
+    vertical-align:top;
+}
+
+.school{
+    font-size:24px;
+    font-weight:bold;
+}
+
+.heading{
+    text-align:center;
+}
+
+.title{
+    font-size:20px;
+    font-weight:bold;
+    text-decoration:underline;
+    margin-top:8px;
+}
+
+.logo{
+    width:85px;
+    height:85px;
+}
+
+.label{
+    width:40%;
+    font-weight:bold;
+}
+
+.value{
+    border-bottom:1px dotted #000;
+}
+
+.signature{
+    margin-top:60px;
+    width:100%;
+}
+
+.signature td{
+    text-align:center;
+}
+
+.footer{
+    margin-top:25px;
+    text-align:center;
+    font-size:12px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+{% for tc in tcs %}
+
+<div class="page">
+
+<table>
+
+<tr>
+
+<td width="18%">
+
+{% if school.logo %}
+<img src="{{ school.logo.url }}" class="logo">
+{% endif %}
+
+</td>
+
+<td class="heading">
+
+<div class="school">
+
+{{ school.name }}
+
+</div>
+
+<div>
+
+{{ school.address }}
+
+</div>
+
+<div>
+
+Phone : {{ school.phone }}
+
+</div>
+
+<div>
+
+Affiliation No : {{ school.affiliation_number }}
+
+</div>
+
+<div class="title">
+
+TRANSFER CERTIFICATE
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+<br>
+
+<table>
+
+<tr>
+
+<td class="label">
+
+TC Number
+
+</td>
+
+<td class="value">
+
+{{ tc.tc_number }}
+
+</td>
+
+<td class="label">
+
+Admission No
+
+</td>
+
+<td class="value">
+
+{{ tc.student.admission_number }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Student Name
+
+</td>
+
+<td colspan="3" class="value">
+
+{{ tc.student.admin.first_name }}
+{{ tc.student.admin.last_name }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Father / Guardian
+
+</td>
+
+<td colspan="3" class="value">
+
+{{ tc.student.parent_name }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Mother
+
+</td>
+
+<td colspan="3" class="value">
+
+{{ tc.student.mother_name }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Date of Birth
+
+</td>
+
+<td class="value">
+
+{{ tc.student.admin.date_of_birth|date:"d-m-Y" }}
+
+</td>
+
+<td class="label">
+
+Gender
+
+</td>
+
+<td class="value">
+
+{{ tc.student.admin.get_gender_display }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Religion
+
+</td>
+
+<td class="value">
+
+{{ tc.student.religion }}
+
+</td>
+
+<td class="label">
+
+Caste
+
+</td>
+
+<td class="value">
+
+{{ tc.student.caste }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Date of Admission
+
+</td>
+
+<td class="value">
+
+{{ tc.student.admission_date|date:"d-m-Y" }}
+
+</td>
+
+<td class="label">
+
+Class Studied
+
+</td>
+
+<td class="value">
+
+{{ tc.student.course }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Leaving Date
+
+</td>
+
+<td class="value">
+
+{{ tc.leaving_date|date:"d-m-Y" }}
+
+</td>
+
+<td class="label">
+
+Last Attended
+
+</td>
+
+<td class="value">
+
+{{ tc.last_attended_date|date:"d-m-Y" }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Qualified for Promotion
+
+</td>
+
+<td colspan="3" class="value">
+
+{% if tc.qualified_for_promotion %}
+YES
+{% else %}
+NO
+{% endif %}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Conduct
+
+</td>
+
+<td colspan="3" class="value">
+
+{{ tc.conduct }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Reason for Leaving
+
+</td>
+
+<td colspan="3" class="value">
+
+{{ tc.reason }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td class="label">
+
+Remarks
+
+</td>
+
+<td colspan="3" class="value">
+
+{{ tc.remarks }}
+
+</td>
+
+</tr>
+
+</table>
+
+<table class="signature">
+
+<tr>
+
+<td>
+
+____________________
+
+<br>
+
+Class Teacher
+
+</td>
+
+<td>
+
+____________________
+
+<br>
+
+Office Superintendent
+
+</td>
+
+<td>
+
+____________________
+
+<br>
+
+Principal
+
+</td>
+
+</tr>
+
+</table>
+
+<div class="footer">
+
+This is a computer generated Transfer Certificate.
+
+</div>
+
+</div>
+
+{% endfor %}
+
+</body>
+
+</html>

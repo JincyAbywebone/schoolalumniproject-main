@@ -1,0 +1,264 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Parent Portal &bull; {{ student.admin.first_name }} {{ student.admin.last_name }}{% endblock breadcrumb %}
+{% block page_heading %}Student Academic &amp; Attendance Profile{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Back Link & Top Bar -->
+  <div class="flex items-center justify-between pb-1 border-b border-slate-200">
+    <a href="{% url 'parent_home' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
+      <span class="material-symbols-outlined text-base">arrow_back</span>
+      <span>Back to Dashboard</span>
+    </a>
+
+    <span class="font-mono text-xs font-semibold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+      Adm No: {{ student.admission_number }}
+    </span>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left Column: Student Profile & Personal Info -->
+    <div class="space-y-6 lg:col-span-1">
+
+      <!-- Student Identity Card -->
+      <div class="card p-6 text-center">
+        {% with initials=student.admin.first_name|slice:":1"|upper|add:student.admin.last_name|slice:":1"|upper %}
+        <div class="mx-auto mb-4">
+          {% if student.admin.profile_pic %}
+            <img src="{{ student.admin.profile_pic.url }}" alt="{{ student.admin.first_name }}" class="w-24 h-24 rounded-3xl object-cover ring-4 ring-indigo-50 shadow-md mx-auto" />
+          {% else %}
+            <div class="w-24 h-24 rounded-3xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black text-3xl flex items-center justify-center shadow-md mx-auto">
+              {{ initials|default:"ST" }}
+            </div>
+          {% endif %}
+        </div>
+        {% endwith %}
+
+        <h3 class="text-xl font-bold text-slate-900">{{ student.admin.first_name }} {{ student.admin.last_name }}</h3>
+        <p class="text-xs font-semibold text-indigo-600 mt-1">{{ student.course.name }} - {{ student.course.division }}</p>
+
+        <div class="mt-5 pt-5 border-t border-slate-100 space-y-2.5 text-left text-xs">
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Admission No</span>
+            <span class="font-mono font-bold text-slate-800">{{ student.admission_number }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Academic Session</span>
+            <span class="font-semibold text-slate-800">{{ student.session }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Gender</span>
+            <span class="font-semibold text-slate-800">
+              {% if student.admin.gender == 'M' %}Male{% elif student.admin.gender == 'F' %}Female{% else %}Other{% endif %}
+            </span>
+          </div>
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Date of Birth</span>
+            <span class="font-semibold text-slate-800">{{ student.admin.date_of_birth|date:"d M Y"|default:"-" }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1">
+            <span class="text-slate-500">Email Address</span>
+            <span class="font-medium text-slate-700 truncate max-w-[170px]">{{ student.admin.email|default:"-" }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guardian & Family Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-indigo-600">family_restroom</span>
+            <h4 class="card-title text-sm font-bold">Guardian &amp; Contact Info</h4>
+          </div>
+        </div>
+        <div class="card-body p-4 space-y-2.5 text-xs">
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Guardian / Parent</span>
+            <span class="font-semibold text-slate-800">{{ student.parent_name|default:user.get_full_name }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Mother's Name</span>
+            <span class="font-semibold text-slate-800">{{ student.mother_name|default:"-" }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Contact Number</span>
+            <span class="font-mono font-semibold text-slate-800">{{ student.guardian_contact_number|default:"-" }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1 border-b border-slate-50">
+            <span class="text-slate-500">Blood Group</span>
+            <span class="font-semibold text-slate-800">{{ student.blood_group|default:"-" }}</span>
+          </div>
+          <div class="flex items-center justify-between py-1">
+            <span class="text-slate-500">Mother Tongue</span>
+            <span class="font-semibold text-slate-800">{{ student.mother_tongue|default:"-" }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Tabs (Academic Results & Attendance) -->
+    <div class="space-y-6 lg:col-span-2">
+
+      <!-- Navigation Tabs Card -->
+      <div class="card">
+        <div class="card-header border-b border-slate-200">
+          <div class="flex items-center gap-3">
+            <button onclick="switchTab('results-tab', this)" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-indigo-600 text-white shadow-sm shadow-indigo-600/20 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-base">grade</span>
+              <span>Examination Results</span>
+            </button>
+            <button onclick="switchTab('attendance-tab', this)" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-base">fact_check</span>
+              <span>Attendance Records</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body p-5">
+
+          <!-- Tab 1: Examination Results -->
+          <div id="results-tab" class="tab-content space-y-6">
+            {% if results_data %}
+              {% for exam_group in results_data %}
+                <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                  <!-- Exam Header -->
+                  <div class="bg-gradient-to-r from-slate-50 to-indigo-50/40 p-4 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-lg">assignment</span>
+                      </div>
+                      <div>
+                        <h4 class="text-sm font-bold text-slate-900">{{ exam_group.exam_name }}</h4>
+                        <p class="text-[11px] text-slate-500">Evaluation Report</p>
+                      </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+                      {{ exam_group.results|length }} Subjects
+                    </span>
+                  </div>
+
+                  <!-- Results Table -->
+                  <div class="overflow-x-auto">
+                    <table class="table table-hover w-full mb-0 text-sm">
+                      <thead class="bg-slate-50 text-slate-600 text-xs">
+                        <tr>
+                          <th>Subject</th>
+                          <th class="text-center w-28">Score</th>
+                          <th class="text-center w-36">Remarks</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100">
+                        {% for result in exam_group.results %}
+                          <tr class="hover:bg-slate-50/70 transition-colors">
+                            <td class="font-semibold text-slate-800">
+                              {{ result.subjectmaster.name|default:"Subject" }}
+                            </td>
+                            <td class="text-center font-mono font-bold text-indigo-700">
+                              {{ result.test|default:"-" }}
+                            </td>
+                            <td class="text-center">
+                              {% with r=result.remarks|lower %}
+                                {% if r == 'outstanding' or r == 'excellent' %}
+                                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                                    {{ result.remarks }}
+                                  </span>
+                                {% elif r == 'very good' or r == 'good' %}
+                                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800">
+                                    {{ result.remarks }}
+                                  </span>
+                                {% elif r == 'absent' %}
+                                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
+                                    Absent
+                                  </span>
+                                {% else %}
+                                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700">
+                                    {{ result.remarks|default:"Recorded" }}
+                                  </span>
+                                {% endif %}
+                              {% endwith %}
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="p-10 text-center text-slate-400">
+                <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">assignment_late</span>
+                <p class="font-bold text-slate-700">No Examination Results Recorded</p>
+                <p class="text-xs text-slate-400 mt-1">Evaluation results will appear here as soon as teachers publish them.</p>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Tab 2: Attendance Records -->
+          <div id="attendance-tab" class="tab-content hidden space-y-4">
+            {% if attendance_data %}
+              <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <table class="table table-hover w-full mb-0 text-sm">
+                  <thead class="bg-slate-50 text-slate-600 text-xs">
+                    <tr>
+                      <th class="w-14 text-center">#</th>
+                      <th>Subject</th>
+                      <th class="text-center w-40">Total Sessions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    {% for item in attendance_data %}
+                      <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="text-center font-mono text-slate-400 text-xs">{{ forloop.counter }}</td>
+                        <td class="font-semibold text-slate-800">{{ item.subject }}</td>
+                        <td class="text-center font-mono font-bold text-slate-700">
+                          <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs">
+                            {{ item.data.total }} Classes
+                          </span>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="p-10 text-center text-slate-400">
+                <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">event_busy</span>
+                <p class="font-bold text-slate-700">No Attendance Records Found</p>
+                <p class="text-xs text-slate-400 mt-1">Attendance logs for this course have not been populated yet.</p>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById(tabId).classList.remove('hidden');
+
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm', 'shadow-indigo-600/20');
+        b.classList.add('text-slate-600', 'hover:text-slate-900', 'hover:bg-slate-100');
+    });
+
+    btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm', 'shadow-indigo-600/20');
+    btn.classList.remove('text-slate-600', 'hover:text-slate-900', 'hover:bg-slate-100');
+}
+</script>
+{% endblock custom_js %}

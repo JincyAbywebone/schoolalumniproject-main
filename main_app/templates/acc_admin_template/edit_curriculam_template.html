@@ -1,0 +1,85 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                    <form method="POST">
+                        {% csrf_token %}
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                  
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Course</label>
+                            <select name="course_id" class="form-control" id='course_id'>
+                                {% for course in courses %}
+                                    <option value="{{ course.id }}" {% if course.id == curriculam.course_id.id %}selected{% endif %}>
+                                        {{ course.name }}-{{ course.division }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select name="subject_data" class="form-control" id='subject_data'>
+                                {% for subject in subjects %}
+                                    <option value="{{ subject.id }}" {% if subject.id == curriculam.subject.id %}selected{% endif %}>
+                                        {{ subject.subject.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        
+                      
+                        <div class="form-group">
+                            <label>Term</label>
+                            <select name="term" class="form-control" id='term'>
+                                <option value="">Select Term</option>
+                                <option value="Term-1">Term-1</option>
+                                <option value="Term-2">Term-2</option>
+                                <option value="Term-3">Term-3</option>
+                               
+                            </select>
+                        </div>
+
+
+
+                        {{ form }}
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                        <button type="Submit" id='curriculam_add' class="btn btn-primary btn-block"  with messages=messages >
+                          Submit  </button>
+                            
+                        <div class="form-group" id="curriculam_data">
+
+                        </div>
+                    </div>
+                </form>
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block custom_js %}
+{% endblock custom_js %}
+       
+

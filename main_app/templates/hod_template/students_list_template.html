@@ -1,0 +1,118 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Students Roster{% endblock breadcrumb %}
+{% block page_heading %}{{ page_title }}{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Action Bar Card -->
+    <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">format_list_bulleted</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-900 tracking-tight">Active Students Roster</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Comprehensive enrollment register across all classes and divisions.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <a href="{% url 'manage_student' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-base">arrow_back</span>
+                <span>Manage Students</span>
+            </a>
+            <a href="{% url 'add_student' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.02]">
+                <span class="material-symbols-outlined text-base">person_add</span>
+                <span>Enroll Student</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-sky-600 text-lg">groups</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Enrolled Students</span>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+                {{ students|length }} Students
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider border-b border-slate-200 text-[11px] font-bold">
+                        <th class="py-3 px-4">#</th>
+                        <th class="py-3 px-4">Student</th>
+                        <th class="py-3 px-4">Gender</th>
+                        <th class="py-3 px-4">Course &amp; Division</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for student in students %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-4 font-bold text-slate-400">{{ forloop.counter }}</td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-3">
+                                {% if student.profile_pic %}
+                                <img src="{{ student.profile_pic.url }}" alt="{{ student.first_name }}" class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-100 shadow-sm">
+                                {% else %}
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 text-white font-bold flex items-center justify-center uppercase shadow-sm">
+                                    {{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}
+                                </div>
+                                {% endif %}
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-900 text-sm">{{ student.first_name }} {{ student.last_name }}</span>
+                                    <span class="text-[11px] text-slate-400 font-normal">{{ student.email }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold {% if student.gender == 'Male' %}bg-blue-50 text-blue-700 border border-blue-200{% elif student.gender == 'Female' %}bg-rose-50 text-rose-700 border border-rose-200{% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+                                {{ student.gender }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                {{ student.student.course }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                                <a href="{% url 'edit_student' student.student.id %}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-indigo-600 hover:bg-indigo-50 text-xs font-semibold transition-colors" title="Edit Student">
+                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                    <span>Edit</span>
+                                </a>
+                                <a href="{% url 'delete_student' student.student.id %}" onclick="return confirm('Are you sure you want to delete this student?')" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-colors" title="Delete Student">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                    <span>Delete</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="py-12 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
+                                    <span class="material-symbols-outlined text-2xl">groups</span>
+                                </div>
+                                <h3 class="font-bold text-slate-700 text-sm">No Students Found</h3>
+                                <p class="text-xs text-slate-400 mt-1 max-w-sm">No student enrollment records in this roster.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock content %}

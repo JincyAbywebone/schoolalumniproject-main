@@ -1,0 +1,238 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block content %}
+
+<div class="container mt-4">
+  {% comment %} <form method="GET" class="mb-4"> {% endcomment %}
+    <div class="row">
+      <div class="col-md-4">
+        <select name="course" id="course" required class="form-control">
+          <option value="">-- Select Course & Division --</option>
+          {% for course in courses %}
+          <option value="{{ course.id }}" {% if course.id|stringformat:'s' == selected_course %}selected{% endif %}>
+            {{ course.name }} - {{ course.division }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <select name="subject_data_value" id="subject_data_value" class="form-control">
+          <option value="">Select Subject</option>
+          {% for subject in subjects %}
+          <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.staff }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <select name="student_data" id="student_data_select" class="form-control">
+          <option value="">Select Student</option>
+          {% for students in student %}
+          <option value="{{ students.id }}" {% if students.id|stringformat:'s' == selected_student %}selected{% endif %}>
+            {{ students.name }}
+          </option>
+          {% endfor %}
+        </select>
+         </div>
+       <div class="form-group">
+  <br>
+    <select class="form-control" id="session_select" name="session_select">
+        {% if sessions %}
+            <option value="{{ sessions.id }}" selected>
+                {{ sessions.start_year }} - {{ sessions.end_year }}
+            </option>
+        {% else %}
+            <option value="">No Active Session</option>
+        {% endif %}
+    </select>
+</div>
+      <div class="col-md-2 mt-3">
+        <button type="button" id="student_graphdata" class="btn btn-primary w-100">View Graph</button>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-md-12">
+    <canvas id="marksGraph" width="900" height="400"></canvas>
+    
+      </div>
+    </div>
+  {% comment %} </form> {% endcomment %}
+</div>
+
+{% endblock content %}
+
+{% block custom_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function () {
+     $('#student_graphdata').click(function (e) {
+        e.preventDefault(); 
+        loadGraph();        
+    });
+    // Load subjects based on selected course
+    $('#course').change(function () {
+        var course = $(this).val();
+        $('#subject_data_value').html('<option value="">Select Subject</option>');
+        $('#student_data_select').html('<option value="">Select Student</option>');
+
+        if (!course) {
+            alert('Please select a course');
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "get_subject" %}',
+            type: 'POST',
+            data: {
+                course: course,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (response) {
+                var json_data = JSON.parse(response);
+                if (json_data.length < 1) {
+                    alert('No subjects available for this course');
+                    return;
+                }
+                var options = '<option value="">Select Subject</option>';
+                json_data.forEach(function (item) {
+                    options += `<option value="${item.id}">${item.name}</option>`;
+                });
+                $('#subject_data_value').html(options);
+            },
+            error: function () {
+                alert('Error loading subjects');
+            }
+        });
+    });
+
+    // Load students when subject is selected
+    $("#subject_data_value").change(function () {
+        var course = $('#course').val();
+        var subject = $('#subject_data_value').val();
+
+        if (!course || !subject) {
+            alert('Please select both course and subject');
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_student' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                subject: subject,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (students) {
+                let studentOptions = "<option value=''>Select Student</option>";
+                students.forEach(student => {
+                    studentOptions += `<option value="${student.id}">${student.name} </option>`;
+                });
+                $("#student_data_select").html(studentOptions);
+            },
+            error: function () {
+                alert("Error fetching students");
+            }
+        });
+    });
+
+    // View graph
+ 
+});
+    
+
+function loadGraph() {
+    const studentId = document.getElementById('student_data_select').value;
+    const subjectId = document.getElementById('subject_data_value').value;
+    const courseId = document.getElementById('course').value;
+    const sessionId = document.getElementById('session_select').value;
+
+    if (!studentId || !subjectId || !courseId || !sessionId) {
+        alert("Please select all fields");
+        return;
+    }
+
+    fetch(`/staff/get_studentmarks1/?student_id=${studentId}&subject_id=${subjectId}&course_id=${courseId}&session_id=${sessionId}`)
+        .then(res => res.json())
+        .then(data => {
+
+            const results = data.results || [];
+            if (results.length === 0) {
+                alert("No marks data found");
+                return;
+            }
+
+            // ✅ Step 1: sort by term number (DB driven order)
+            results.sort((a, b) => {
+                const numA = parseInt(a.term.replace(/\D/g, '')) || 0;
+                const numB = parseInt(b.term.replace(/\D/g, '')) || 0;
+                return numA - numB;
+            });
+
+            // ✅ Step 2: X-axis labels (exam names in order)
+            const labels = [...new Set(results.map(r => r.exam_name))];
+
+            // ✅ Step 3: Unique exam types (TP, PT, Semester...)
+            const examTypes = [...new Set(results.map(r => r.exam_type))];
+
+            // Colors for lines
+            const colors = ['#1e3a8a', '#059669', '#dc2626', '#f59e0b', '#7c3aed', '#db2777'];
+
+            // ✅ Step 4: Create datasets dynamically
+            const datasets = examTypes.map((type, index) => {
+                const dataPoints = labels.map(label => {
+                    const item = results.find(r => r.exam_name === label && r.exam_type === type);
+                    return item ? item.marks : null;
+                });
+
+                return {
+                    label: type,
+                    data: dataPoints,
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length],
+                    tension: 0.4,
+                    pointRadius: 5,
+                    spanGaps: false
+                };
+            });
+
+            const ctx = document.getElementById('marksGraph').getContext('2d');
+            if (window.myChart) window.myChart.destroy();
+
+            window.myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Student Marks'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Marks' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Exam' }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(err => {
+            console.error("Graph error:", err);
+        });
+}
+       
+</script>
+{% endblock custom_js %}

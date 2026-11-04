@@ -1,0 +1,37 @@
+<!-- templates/auditlog_view.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audit Log Viewer</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .log-entry { border-bottom: 1px solid #ccc; margin-bottom: 15px; padding-bottom: 10px; }
+        ul { padding-left: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Audit Log Entries</h1>
+
+    {% for log in logs %}
+        <div class="log-entry">
+            <p><strong>Model:</strong> {{ log.content_type.model }}</p>
+            <p><strong>Action:</strong> {{ log.get_action_display }}</p>
+            <p><strong>User:</strong> {{ log.actor }}</p>
+            <p><strong>Date:</strong> {{ log.timestamp }}</p>
+            <p><strong>Changes:</strong></p>
+            <ul>
+                {% for field, values in log.changes_dict.items %}
+                    {% if values|length == 2 %}
+                        <li>{{ field }}: '{{ values.0 }}' → '{{ values.1 }}'</li>
+                    {% else %}
+                        <li>{{ field }}: {{ values }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% empty %}
+        <p>No log entries found.</p>
+    {% endfor %}
+</body>
+</html>

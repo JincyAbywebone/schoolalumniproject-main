@@ -1,0 +1,547 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block custom_css %}
+<style>
+    /* Card Animations */
+    .animated-card {
+        animation: fadeInUp 0.8s ease-out both;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .animated-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .from-card {
+        animation-delay: 0.1s;
+    }
+
+    .to-card {
+        animation-delay: 0.3s;
+    }
+
+    /* Keyframes */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translate3d(0, 40px, 0);
+        }
+
+        to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+    @keyframes pulse-blue {
+        0% {
+            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+        }
+    }
+
+    /* Arrow Styling */
+    .arrow-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #6c757d;
+        animation: floatArrow 2s infinite ease-in-out;
+    }
+
+    @keyframes floatArrow {
+
+        0%,
+        100% {
+            transform: translateX(0);
+        }
+
+        50% {
+            transform: translateX(10px);
+        }
+    }
+
+    /* Button Pulse */
+    .btn-pulse {
+        animation: pulse-blue 2s infinite;
+    }
+
+    /* Table Row Animation */
+    .student-row {
+        opacity: 0;
+        animation: slideIn 0.5s forwards;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+</style>
+{% endblock custom_css %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Filter Card -->
+        <div class="card card-primary card-outline shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-user-graduate mr-2"></i>{{page_title}}</h3>
+            </div>
+            <div class="card-body">
+                <form id="promotionFilterForm">
+                    {% csrf_token %}
+                    <div class="row align-items-center">
+                        <!-- From Section -->
+                        <div class="col-md-5">
+                            <div class="card card-outline card-warning mb-3 animated-card from-card">
+                                <div class="card-header py-2 bg-light">
+                                    <h3 class="card-title text-warning font-weight-bold"><i
+                                            class="fas fa-arrow-circle-right mr-1"></i> From (Current)
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label for="from_course">Course & Division</label>
+                                        <select name="from_course" id="from_course" class="form-control select2"
+                                            style="width: 100%;">
+                                            <option value="">-- Select Course --</option>
+                                            {% for course in courses %}
+                                            <option value="{{ course.id }}">{{ course.name }} - {{ course.division }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="from_session">Academic Year</label>
+                                        <select name="from_session" id="from_session" class="form-control select2"
+                                            style="width: 100%;">
+                                            <option value="">-- Select Session --</option>
+                                            {% for session in sessions %}
+                                            <option value="{{ session.id }}">{{ session }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Arrow Icon (Hidden on mobile) -->
+                        <div class="col-md-2 d-none d-md-flex arrow-container">
+                            <i class="fas fa-angle-double-right"></i>
+                        </div>
+
+                        <!-- To Section -->
+                        <div class="col-md-5">
+                            <div class="card card-outline card-success mb-3 animated-card to-card">
+                                <div class="card-header py-2 bg-light">
+                                    <h3 class="card-title text-success font-weight-bold"><i
+                                            class="fas fa-arrow-circle-left mr-1"></i> To (Promote To)
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label for="to_course">Course & Division</label>
+                                        <select name="to_course" id="to_course" class="form-control select2"
+                                            style="width: 100%;">
+                                            <option value="">-- Select Course --</option>
+                                            {% for course in courses %}
+                                            <option value="{{ course.id }}">{{ course.name }} - {{ course.division }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="to_session">Academic Year</label>
+                                        <select name="to_session" id="to_session" class="form-control select2"
+                                            style="width: 100%;">
+                                            <option value="">-- Select Session --</option>
+                                            {% for session in sessions %}
+                                            <option value="{{ session.id }}">{{ session }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12 text-center">
+                            <button type="button" id="fetchStudentsBtn"
+                                class="btn btn-primary btn-lg btn-pulse px-5 rounded-pill shadow">
+                                <i class="fas fa-search mr-2"></i> Fetch Students
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Students Table Card -->
+        <div class="card card-success card-outline shadow" id="studentsCard" style="display: none;">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-list mr-2"></i>Students List</h3>
+                <div class="card-tools">
+                    <span class="badge badge-primary" id="selectedCount">0 selected</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="selectAll">
+                        <label class="custom-control-label" for="selectAll"><strong>Select All Students</strong></label>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="studentsTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width: 40px;">
+                                    <i class="fas fa-check-square text-secondary"></i>
+                                </th>
+                                <th>SN</th>
+                                <th>Admission No.</th>
+                                <th>Student Name</th>
+                                <th>Current Course</th>
+                                <th>Current Session</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <!-- Populated via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="remarks">Remarks (Optional)</label>
+                    <textarea id="remarks" class="form-control" rows="2"
+                        placeholder="Enter any remarks for this promotion..."></textarea>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <button type="button" id="promoteBtn" class="btn btn-success btn-lg px-5 shadow rounded-pill" disabled>
+                    <i class="fas fa-rocket mr-2"></i> Promote Selected Students
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay"
+            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center;">
+            <div class="text-center text-primary">
+                <i class="fas fa-circle-notch fa-spin fa-3x mb-3"></i>
+                <h4 class="font-weight-bold">Processing Promotion...</h4>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content text-center py-4">
+            <div class="modal-body">
+                <i class="fas fa-check-circle text-success fa-5x mb-3 animated bounceIn"></i>
+                <h4 class="modal-title font-weight-bold mb-2">Success!</h4>
+                <p id="successMessage" class="lead mb-4"></p>
+                <button type="button" class="btn btn-primary rounded-pill px-4" data-dismiss="modal">Great!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    $(document).ready(function () {
+        // Initialize select2 if available
+        if ($.fn.select2) {
+            $('.select2').select2({ theme: 'bootstrap4' });
+        }
+
+        // --- Dynamic Filtering Logic ---
+
+        // Helper to extract integer from string (e.g., "Class 8" -> 8)
+        function extractNumber(text) {
+            var match = text.match(/(\d+)/);
+            return match ? parseInt(match[0]) : null;
+        }
+
+        // Helper to extract start year from session (e.g., "2023-2024" -> 2023)
+        function extractStartYear(text) {
+            var match = text.match(/^(\d{4})/);
+            return match ? parseInt(match[0]) : null;
+        }
+
+        // Store original options to restore them later
+        var $toCourse = $('#to_course');
+        var $toSession = $('#to_session');
+        var originalToCourseOptions = $toCourse.find('option').clone();
+        var originalToSessionOptions = $toSession.find('option').clone();
+
+        // Filter To Course based on From Course
+        $('#from_course').on('change', function () {
+            var fromText = $(this).find('option:selected').text();
+            var fromLevel = extractNumber(fromText);
+
+            // 1. Destroy Select2 (if initialized) to modify DOM freely
+            if ($.fn.select2 && $toCourse.hasClass("select2-hidden-accessible")) {
+                $toCourse.select2('destroy');
+            }
+
+            // 2. Clear current options
+            $toCourse.empty();
+
+            // 3. Re-append valid options
+            originalToCourseOptions.each(function () {
+                var toText = $(this).text();
+                var toLevel = extractNumber(toText);
+                var optionVal = $(this).val();
+
+                var shouldShow = false;
+
+                if (optionVal === "") {
+                    shouldShow = true; // Always show placeholder
+                } else if (fromLevel !== null && toLevel !== null) {
+                    if (toLevel > fromLevel) {
+                        shouldShow = true; // Show only higher classes
+                    }
+                } else {
+                    shouldShow = true; // Fallback: show all if From is invalid/unselected
+                }
+
+                if (shouldShow) {
+                    $toCourse.append($(this).clone());
+                }
+            });
+
+            // 4. Re-initialize Select2
+            if ($.fn.select2) {
+                $toCourse.select2({ theme: 'bootstrap4' });
+            }
+            // Trigger change to validate or reset dependent logic
+            $toCourse.trigger('change');
+        });
+
+        // Filter To Session based on From Session
+        $('#from_session').on('change', function () {
+            var fromText = $(this).find('option:selected').text();
+            var fromYear = extractStartYear(fromText);
+
+            if ($.fn.select2 && $toSession.hasClass("select2-hidden-accessible")) {
+                $toSession.select2('destroy');
+            }
+
+            $toSession.empty();
+
+            originalToSessionOptions.each(function () {
+                var toText = $(this).text();
+                var toYear = extractStartYear(toText);
+                var optionVal = $(this).val();
+
+                var shouldShow = false;
+
+                if (optionVal === "") {
+                    shouldShow = true;
+                } else if (fromYear !== null && toYear !== null) {
+                    if (toYear > fromYear) {
+                        shouldShow = true; // Show only future sessions
+                    }
+                } else {
+                    shouldShow = true;
+                }
+
+                if (shouldShow) {
+                    $toSession.append($(this).clone());
+                }
+            });
+
+            if ($.fn.select2) {
+                $toSession.select2({ theme: 'bootstrap4' });
+            }
+            $toSession.trigger('change');
+        });
+
+        // --- End Dynamic Filtering Logic ---
+
+
+        // Fetch students when button is clicked
+        $('#fetchStudentsBtn').on('click', function () {
+            var fromCourse = $('#from_course').val();
+            var fromSession = $('#from_session').val();
+            var toCourse = $('#to_course').val();
+            var toSession = $('#to_session').val();
+
+            // Validation
+            if (!fromCourse) {
+                alert('Please select a "From Course".');
+                return;
+            }
+
+
+            // Show loading
+            $('#studentsTableBody').html('<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i> <div class="mt-2 text-muted">Fetching students...</div></td></tr>');
+            $('#studentsCard').slideDown();
+
+            // AJAX call to fetch students
+            $.ajax({
+                url: "{% url 'acc_admin_get_promotion_students' %}",
+                type: 'POST',
+                data: {
+                    'from_course': fromCourse,
+                    'from_session': fromSession,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    var students;
+                    if (typeof response === 'string') {
+                        students = JSON.parse(response);
+                    } else {
+                        students = response;
+                    }
+
+                    var html = '';
+                    if (students.length === 0) {
+                        html = '<tr><td colspan="6" class="text-center text-muted py-3"><i class="fas fa-info-circle mr-1"></i> No students found for the selected course/session.</td></tr>';
+                        $('#promoteBtn').prop('disabled', true);
+                    } else {
+                        $.each(students, function (index, student) {
+                            var delay = index * 0.05; // Stagger animation
+                            html += '<tr class="student-row" style="animation-delay: ' + delay + 's;">';
+                            html += '<td><div class="custom-control custom-checkbox">';
+                            html += '<input type="checkbox" class="custom-control-input student-checkbox" id="student_' + student.id + '" value="' + student.id + '">';
+                            html += '<label class="custom-control-label" for="student_' + student.id + '"></label>';
+                            html += '</div></td>';
+                            html += '<td>' + (index + 1) + '</td>';
+                            html += '<td><span class="badge badge-light border">' + student.admission_number + '</span></td>';
+                            html += '<td class="font-weight-bold">' + student.name + '</td>';
+                            html += '<td>' + student.course + '</td>';
+                            html += '<td>' + student.session + '</td>';
+                            html += '</tr>';
+                        });
+                    }
+                    $('#studentsTableBody').html(html);
+                    updateSelectedCount();
+                },
+                error: function () {
+                    $('#studentsTableBody').html('<tr><td colspan="6" class="text-center text-danger">Error fetching students. Please try again.</td></tr>');
+                }
+            });
+        });
+
+        // Select All checkbox
+        $('#selectAll').on('change', function () {
+            $('.student-checkbox').prop('checked', $(this).prop('checked'));
+            updateSelectedCount();
+        });
+
+        // Individual checkbox change
+        $(document).on('change', '.student-checkbox', function () {
+            var allChecked = $('.student-checkbox').length === $('.student-checkbox:checked').length;
+            $('#selectAll').prop('checked', allChecked);
+            updateSelectedCount();
+        });
+
+        function updateSelectedCount() {
+            var count = $('.student-checkbox:checked').length;
+            $('#selectedCount').text(count + ' selected');
+            $('#promoteBtn').prop('disabled', count === 0);
+        }
+
+        // Promote button click
+        $('#promoteBtn').on('click', function () {
+            var selectedStudents = [];
+            $('.student-checkbox:checked').each(function () {
+                selectedStudents.push($(this).val());
+            });
+
+            if (selectedStudents.length === 0) {
+                alert('Please select at least one student to promote.');
+                return;
+            }
+
+            var toCourse = $('#to_course').val();
+            var toSession = $('#to_session').val();
+
+            if (!toCourse) {
+                alert('Please select a "To Course".');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to promote ' + selectedStudents.length + ' student(s)?')) {
+                return;
+            }
+
+            // Show loading overlay
+            $('#loadingOverlay').css('display', 'flex');
+            // Issue 5 Fix: Disable button to prevent double-click
+            $('#promoteBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Promoting...');
+
+            $.ajax({
+                url: "{% url 'acc_admin_promote_students' %}",
+                type: 'POST',
+                data: {
+                    'student_ids': JSON.stringify(selectedStudents),
+                    'from_course': $('#from_course').val(),
+                    'from_session': $('#from_session').val(),
+                    'to_course': toCourse,
+                    'to_session': toSession,
+                    'remarks': $('#remarks').val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    $('#loadingOverlay').hide();
+                    var data;
+                    if (typeof response === 'string') {
+                        data = JSON.parse(response);
+                    } else {
+                        data = response;
+                    }
+                    if (data.status === 'success') {
+                        // Use Bootstrap Modal instead of alert
+                        $('#successMessage').text(data.message);
+                        $('#successModal').modal('show');
+
+                        // Re-fetch students to update the list
+                        $('#fetchStudentsBtn').click();
+                        // Clear selection state
+                        $('#selectCount').text('0 selected');
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                },
+                error: function () {
+                    $('#loadingOverlay').hide();
+                    alert('An error occurred while promoting students. Please try again.');
+                },
+                complete: function () {
+                    // Re-enable button after request completes (success or error)
+                    $('#promoteBtn').prop('disabled', false).html('<i class="fas fa-check-circle mr-1"></i> Promote Selected');
+                }
+            });
+        });
+    });
+</script>
+{% endblock custom_js %}

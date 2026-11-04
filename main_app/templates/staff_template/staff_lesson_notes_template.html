@@ -1,0 +1,151 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                  <form method="POST" enctype="multipart/form-data">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="form-group">
+                        <label>Course</label>
+                        <select name="course" class="form-control" id='course'>
+                            <option value="">select Course</option>
+                            {% for course in subjects  %}
+                            <option value="{{course.course.id}}">{{course.course.name}}- {{course.course.division }}</option>
+                            {% endfor %}
+                        </select>
+                       </div>
+                    <div class="form-group" id="subject_data" name="subject_data1">
+                        <label>Subject</label>
+                        <select  class="form-control" id="subject_data" name="subject_data1">
+                            <option value="">Select Subject</option>
+                            
+                        </select>
+                    </div> 
+                   <div class="form-group" id="curriculam_data">
+    <label>Title</label>
+    <select class="form-control" name="subject_data2" id="subject_data2">
+        <option value="">Select Title</option>
+    </select>
+</div>
+                </div>
+  {% include "main_app/form_template.html" with messages=messages  form=form button_text="Add Lesson"%}
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</form>
+</section>
+{% endblock content %}
+{% block custom_js %}
+ <script>
+   
+    $("#course").change(function() {
+        var course = $("#course").val()  
+        $("#subject_data").html(null)
+         if (course.length == 0){
+            alert("Please select course");
+            return false;
+         }
+         $.ajax({
+            url: "{% url 'staff_get_course' %}",
+            type: 'POST',
+            data: {
+                course: course,
+              }
+        }).done(function (response) {
+            
+           
+           var json_data = JSON.parse(response)
+          
+           if (json_data.length < 1) {
+           
+                    alert("No data to display")
+                } else {
+                    var div_data = "</hr><div class='form-group'> <label>Subject</label> <select class ='form-control' name ='subject_data1' id='subject_data1'>"
+                     for ( key in json_data) {
+                       
+                        div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['name'] + "</option>"
+                    }
+                    
+                    // Close the select and div elements
+                    div_data += "</select></div>"
+                    
+                    // Insert the generated HTML into the element with id 'subject_data'
+                    $("#subject_data").html(div_data);
+                    
+                    // Optional: Alert the generated HTML for debugging
+                   // alert(div_data);
+
+                }
+                
+            }).fail(function (response) {
+                alert("Error in fetching students")
+        
+
+        })
+    })
+
+    $("#subject_data").click(function() {
+        var subject = $("#subject_data1").val() 
+        var course = $("#course").val()
+       
+        $("#curriculam_data").html(null)
+         if (course.length == 0){
+            alert("Please select subject");
+            return false;
+         }
+         $.ajax({
+            url: "{% url 'staff_get_curriculam' %}",
+            type: 'POST',
+            data: {
+                subject: subject,
+                course: course,
+              }
+        }).done(function (response) {
+            
+           
+           var json_data = JSON.parse(response)
+                  
+           if (json_data.length < 1) {
+           
+                    alert("No data to display")
+                } else {
+                    var div_data = "</hr><div class='form-group'> <label>Title</label> <select class ='form-control' name ='subject_data2' id='subject_data2'>";
+                     for ( key in json_data) {
+                       
+                        div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['title'] + "</option>"
+                    }
+                    
+                    // Close the select and div elements
+                    div_data += "</select></div>"
+                    
+                    // Insert the generated HTML into the element with id 'subject_data'
+                    $("#curriculam_data").html(div_data);
+                    
+                    // Optional: Alert the generated HTML for debugging
+                   // alert(div_data);
+
+                }
+                
+            }).fail(function (response) {
+                alert("Error in fetching students")
+        
+
+        })
+    })
+
+
+</script>
+{% endblock custom_js %}

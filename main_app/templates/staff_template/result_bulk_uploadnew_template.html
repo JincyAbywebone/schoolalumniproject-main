@@ -1,0 +1,594 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Staff &bull; Exams &bull; Result Bulk Upload{% endblock breadcrumb %}
+{% block page_heading %}Bulk Examination Result Upload{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Top Action & Navigation Tabs -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1 border-b border-slate-200">
+    <div class="flex items-center gap-2">
+      <a href="{% url 'staff_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-sm shadow-indigo-600/20">
+        <span class="material-symbols-outlined text-base">upload_file</span>
+        <span>Bulk Upload</span>
+      </a>
+      <a href="{% url 'staff_add_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
+        <span class="material-symbols-outlined text-base text-slate-400">person_add</span>
+        <span>Single Student Entry</span>
+      </a>
+    </div>
+
+    <div>
+      <a href="{% url 'staff_manage_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all">
+        <span class="material-symbols-outlined text-base">manage_search</span>
+        <span>Manage Saved Results</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Messages Alert -->
+  {% if messages %}
+    <div class="space-y-2">
+      {% for message in messages %}
+        <div class="p-4 rounded-xl text-sm font-medium flex items-center gap-3 {% if message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200{% elif message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-sky-50 text-sky-700 border border-sky-200{% endif %}">
+          <span class="material-symbols-outlined text-xl">
+            {% if message.tags == 'error' %}error{% elif message.tags == 'success' %}check_circle{% else %}info{% endif %}
+          </span>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Filter & Class Selection Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">tune</span>
+        </div>
+        <div>
+          <h3 class="card-title">Select Class, Subject &amp; Exam</h3>
+          <p class="text-xs text-slate-500 font-normal mt-0.5">Filter the target class and examination to populate students list</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form id="filter_form" class="space-y-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <!-- Course / Class -->
+          <div class="form-group mb-0">
+            <label for="course" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-indigo-500">school</span>
+              Class / Course &amp; Division <span class="text-rose-500">*</span>
+            </label>
+            <select name="course" class="form-control" id="course" required>
+              <option value="">-- Choose Class --</option>
+              {% for course in courses %}
+                <option value="{{ course.id }}">{{ course.name }} - {{ course.division }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Subject -->
+          <div class="form-group mb-0" id="subject_data_value">
+            <label for="subject_data_value1" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-sky-500">menu_book</span>
+              Subject <span class="text-rose-500">*</span>
+            </label>
+            <select name="subject_data_value" class="form-control" id="subject_data_value1" required>
+              <option value="">-- Select Course First --</option>
+              {% for subject in subjects %}
+                <option value="{{ subject.id }}">{{ subject.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Exam -->
+          <div class="form-group mb-0">
+            <label for="exam_name" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-amber-500">assignment</span>
+              Examination <span class="text-rose-500">*</span>
+            </label>
+            <select class="form-control" id="exam_name" name="exam_name" required>
+              <option value="">-- Select Exam --</option>
+              {% for examname in examnames %}
+                <option value="{{ examname.id }}">{{ examname.exam_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Term -->
+          <div class="form-group mb-0">
+            <label for="term_select" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-purple-500">calendar_month</span>
+              Academic Term <span class="text-rose-500">*</span>
+            </label>
+            <select class="form-control" id="term_select" name="term_select" required>
+              <option value="">-- Select Term --</option>
+            </select>
+          </div>
+
+          <!-- Session -->
+          <div class="form-group mb-0">
+            <label for="session_select" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-emerald-500">history_edu</span>
+              Academic Session <span class="text-rose-500">*</span>
+            </label>
+            <select class="form-control" id="session_select" name="session_select">
+              {% if sessions %}
+                <option value="{{ sessions.id }}" selected>
+                  {{ sessions.start_year }} - {{ sessions.end_year }}
+                </option>
+              {% else %}
+                <option value="">No Active Session</option>
+              {% endif %}
+            </select>
+          </div>
+
+          <!-- Action Button -->
+          <div class="form-group mb-0 flex items-end">
+            <button type="button" id="student_details" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 transition-all disabled:opacity-50">
+              <span class="material-symbols-outlined text-lg" id="fetch_btn_icon">group</span>
+              <span id="fetch_btn_text">Fetch Students List</span>
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="loading_spinner" class="hidden">
+    <div class="card p-12 text-center">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 mb-3 animate-spin">
+        <span class="material-symbols-outlined text-2xl">progress_activity</span>
+      </div>
+      <p class="text-sm font-semibold text-slate-700">Loading student roster...</p>
+      <p class="text-xs text-slate-500 mt-1">Fetching enrolled students and exam parameters</p>
+    </div>
+  </div>
+
+  <!-- Students Bulk Entry Section -->
+  <div id="bulk_data_list">
+    <!-- Populated via AJAX -->
+  </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function () {
+    let cachedMaxMarks = 20;
+    let currentExamId = null;
+
+    // Helper: fetch maximum marks for an exam
+    function fetchMaxMarks(exam_id, callback) {
+        if (!exam_id) {
+            callback(20);
+            return;
+        }
+        if (cachedMaxMarks !== null && exam_id === currentExamId) {
+            callback(cachedMaxMarks);
+            return;
+        }
+        $.ajax({
+            url: "{% url 'get_max_marks' %}",
+            data: { exam_id: exam_id },
+            success: function (data) {
+                let maxMarks = parseFloat(data.max_marks);
+                if (!isNaN(maxMarks) && maxMarks > 0) {
+                    cachedMaxMarks = maxMarks;
+                    currentExamId = exam_id;
+                    callback(maxMarks);
+                } else {
+                    cachedMaxMarks = 20;
+                    callback(20);
+                }
+            },
+            error: function () {
+                cachedMaxMarks = 20;
+                callback(20);
+            }
+        });
+    }
+
+    // Remark evaluation helper with styling metadata
+    function getRemarkInfo(score, maxMarks) {
+        if (score === 0) {
+            return { text: "Absent", badgeClass: "bg-slate-100 text-slate-600 border-slate-200" };
+        }
+        if (score > maxMarks) {
+            return { text: "Invalid Score", badgeClass: "bg-rose-100 text-rose-700 border-rose-200" };
+        }
+
+        let percentage = (score / maxMarks) * 100;
+
+        if (percentage >= 95) return { text: "Outstanding", badgeClass: "bg-emerald-100 text-emerald-800 border-emerald-200" };
+        if (percentage >= 90) return { text: "Excellent", badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200" };
+        if (percentage >= 85) return { text: "Very Good", badgeClass: "bg-teal-100 text-teal-700 border-teal-200" };
+        if (percentage >= 80) return { text: "Good", badgeClass: "bg-sky-100 text-sky-700 border-sky-200" };
+        if (percentage >= 70) return { text: "Satisfactory", badgeClass: "bg-blue-100 text-blue-700 border-blue-200" };
+        if (percentage >= 60) return { text: "Average", badgeClass: "bg-amber-100 text-amber-700 border-amber-200" };
+        if (percentage >= 50) return { text: "Below Average", badgeClass: "bg-orange-100 text-orange-700 border-orange-200" };
+        return { text: "Need Improvement", badgeClass: "bg-rose-100 text-rose-700 border-rose-200" };
+    }
+
+    // Dynamic remarks on score input
+    $(document).on("input", "input[name='score']", function () {
+        let input = $(this);
+        let val = input.val().trim();
+        let row = input.closest("tr");
+        let remarkInput = row.find("input[name='remarks']");
+        let examId = $("#exam_name").val();
+
+        if (val === "") {
+            remarkInput.val("").attr("class", "form-control text-xs font-semibold bg-slate-50 text-slate-500");
+            updateSummaryCounters();
+            return;
+        }
+
+        let score = parseFloat(val);
+        if (isNaN(score) || score < 0) {
+            remarkInput.val("Invalid Score").attr("class", "form-control text-xs font-semibold bg-rose-50 text-rose-700 border-rose-300");
+            updateSummaryCounters();
+            return;
+        }
+
+        fetchMaxMarks(examId, function (maxMarks) {
+            let info = getRemarkInfo(score, maxMarks);
+            remarkInput.val(info.text);
+            remarkInput.attr("class", "form-control text-xs font-semibold border " + info.badgeClass);
+            updateSummaryCounters();
+        });
+    });
+
+    function updateSummaryCounters() {
+        let total = $("input[name='score']").length;
+        let filled = 0;
+        $("input[name='score']").each(function () {
+            if ($(this).val().trim() !== "") filled++;
+        });
+        $("#entry_counter").text(filled + " / " + total + " Entered");
+    }
+
+    // Course selection -> fetch subjects
+    $("#course").change(function () {
+        let course = $(this).val();
+        if (!course) {
+            $("#subject_data_value1").html("<option value=''>-- Select Course First --</option>");
+            return;
+        }
+
+        $("#subject_data_value1").html("<option value=''>Loading subjects...</option>").prop("disabled", true);
+
+        $.ajax({
+            url: "{% url 'get_course_list' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                let subjects = typeof response === 'string' ? JSON.parse(response) : response;
+                let options = "<option value=''>-- Select Subject --</option>";
+                if (subjects.length > 0) {
+                    subjects.forEach(subject => {
+                        options += `<option value="${subject.id}">${subject.name} (${subject.staff})</option>`;
+                    });
+                } else {
+                    options = "<option value=''>No subjects assigned to this course</option>";
+                }
+                $("#subject_data_value1").html(options).prop("disabled", false);
+            },
+            error: function () {
+                $("#subject_data_value1").html("<option value=''>Failed to load subjects</option>").prop("disabled", false);
+            }
+        });
+    });
+
+    // Exam selection -> fetch terms & cache max marks
+    $("#exam_name").change(function () {
+        let exam_id = $(this).val();
+        $("#term_select").html("<option value=''>-- Select Term --</option>");
+
+        if (!exam_id) return;
+
+        fetchMaxMarks(exam_id, function (mm) {
+            $("#max_marks_badge").text(mm);
+        });
+
+        $.ajax({
+            url: "{% url 'get_term_list' %}",
+            type: 'POST',
+            data: {
+                exam_name: exam_id,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (terms) {
+                let options = "<option value=''>-- Select Term --</option>";
+                if (terms && terms.length > 0) {
+                    terms.forEach(term => {
+                        options += `<option value="${term.name}">${term.name}</option>`;
+                    });
+                } else {
+                    options += `<option value="Term-1">Term-1</option><option value="Term-2">Term-2</option>`;
+                }
+                $("#term_select").html(options);
+            },
+            error: function () {
+                $("#term_select").html(`<option value="">-- Select Term --</option><option value="Term-1">Term-1</option><option value="Term-2">Term-2</option>`);
+            }
+        });
+    });
+
+    // Submit -> fetch student list
+    $("#student_details").click(function () {
+        let course = $("#course").val();
+        let subject = $("#subject_data_value1").val();
+        let exam = $("#exam_name").val();
+        let term = $("#term_select").val();
+        let session = $("#session_select").val();
+
+        if (!course || !subject || !exam || !term || !session) {
+            alert("Please select Course, Subject, Exam, Term, and Session to proceed.");
+            return;
+        }
+
+        let courseText = $("#course option:selected").text();
+        let subjectText = $("#subject_data_value1 option:selected").text();
+        let examText = $("#exam_name option:selected").text();
+
+        $("#loading_spinner").removeClass("hidden");
+        $("#bulk_data_list").html("");
+        $("#student_details").prop("disabled", true);
+        $("#fetch_btn_text").text("Loading...");
+
+        fetchMaxMarks(exam, function (maxMarks) {
+            $.ajax({
+                url: "{% url 'get_students_bulk' %}",
+                type: 'POST',
+                data: {
+                    course: course,
+                    subject_data_value1: subject,
+                    session: session,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    $("#loading_spinner").addClass("hidden");
+                    $("#student_details").prop("disabled", false);
+                    $("#fetch_btn_text").text("Fetch Students List");
+
+                    let students = typeof response === "string" ? JSON.parse(response) : response;
+                    if (!students || students.length < 1) {
+                        let emptyHtml = `
+                            <div class="card p-10 text-center">
+                                <div class="w-12 h-12 rounded-full bg-amber-50 text-amber-500 mx-auto flex items-center justify-center mb-3">
+                                    <span class="material-symbols-outlined text-2xl">search_off</span>
+                                </div>
+                                <h4 class="text-base font-bold text-slate-800">No Students Found</h4>
+                                <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">There are no active students enrolled for this course and academic session.</p>
+                            </div>`;
+                        $("#bulk_data_list").html(emptyHtml);
+                        return;
+                    }
+
+                    let html = `
+                    <div class="card">
+                        <!-- Table Card Header -->
+                        <div class="card-header flex-wrap gap-3">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-indigo-600">assignment_turned_in</span>
+                                    <h3 class="card-title">Mark Evaluation Sheet</h3>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
+                                    <span class="font-semibold text-slate-700">${courseText}</span>
+                                    <span>&bull;</span>
+                                    <span>${subjectText}</span>
+                                    <span>&bull;</span>
+                                    <span class="font-medium text-indigo-600">${examText} (${term})</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    Max Score: ${maxMarks}
+                                </span>
+                                <span id="entry_counter" class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">
+                                    0 / ${students.length} Entered
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="card-body p-0 overflow-x-auto">
+                            <table class="table table-bordered table-hover w-full mb-0 text-sm">
+                                <thead class="bg-slate-50 text-slate-700">
+                                    <tr>
+                                        <th class="w-14 text-center">#</th>
+                                        <th class="w-36">Admission No</th>
+                                        <th>Student Name</th>
+                                        <th class="w-48 text-center">Score (Max: ${maxMarks})</th>
+                                        <th class="w-56 text-center">Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">`;
+
+                    students.forEach((student, i) => {
+                        let initials = student.name ? student.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase() : "ST";
+                        html += `
+                        <tr class="hover:bg-slate-50/70 transition-colors">
+                            <td class="text-center font-mono text-slate-400 text-xs" data-student-id='${student.id}'>${i + 1}</td>
+                            <td>
+                                <span class="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                                    ${student.admission_number || "N/A"}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center">
+                                        ${initials}
+                                    </div>
+                                    <span class="font-semibold text-slate-800">${student.name}</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" 
+                                       step="any" 
+                                       min="0" 
+                                       max="${maxMarks}" 
+                                       class="form-control text-center font-bold text-slate-900 focus:bg-indigo-50/30" 
+                                       name="score" 
+                                       placeholder="0.0" 
+                                       data-student-id="${student.id}" />
+                            </td>
+                            <td class="text-center">
+                                <input type="text" 
+                                       class="form-control text-xs font-semibold bg-slate-50 text-slate-500" 
+                                       name="remarks" 
+                                       placeholder="Auto evaluated" 
+                                       readonly />
+                            </td>
+                        </tr>`;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Footer Actions -->
+                        <div class="card-footer flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <p class="text-xs text-slate-500">
+                                Tip: Enter <span class="font-bold">0</span> for absent students. Marks greater than ${maxMarks} will be flagged as invalid.
+                            </p>
+                            <button id="save_results" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50">
+                                <span class="material-symbols-outlined text-lg">save</span>
+                                <span>Save All Results</span>
+                            </button>
+                        </div>
+                    </div>`;
+
+                    $("#bulk_data_list").html(html);
+                },
+                error: function (xhr) {
+                    $("#loading_spinner").addClass("hidden");
+                    $("#student_details").prop("disabled", false);
+                    $("#fetch_btn_text").text("Fetch Students List");
+                    alert("Error loading students: " + (xhr.responseText || xhr.statusText));
+                }
+            });
+        });
+    });
+
+    // Save Results logic
+    $(document).on("click", "#save_results", function (e) {
+        e.preventDefault();
+
+        let data = [];
+        let subject_id = $("#subject_data_value1").val();
+        let term = $("#term_select").val();
+        let course = $("#course").val();
+        let exam_type = $("#exam_name option:selected").text().trim();
+        let session = $("#session_select").val();
+
+        if (!subject_id || !term || !course || !exam_type || !session) {
+            alert("Missing required fields. Please ensure course, subject, exam, term, and session are all selected.");
+            return;
+        }
+
+        let hasInvalid = false;
+
+        $("#bulk_data_list tbody tr").each(function () {
+            let student_id = $(this).find("td:first").data("student-id");
+            let scoreVal = $(this).find("input[name='score']").val();
+
+            if (!scoreVal || scoreVal.toString().trim() === "") {
+                return; // skip students with no score entered
+            }
+
+            let test = parseFloat(scoreVal);
+            if (isNaN(test) || test < 0 || test > cachedMaxMarks) {
+                hasInvalid = true;
+                $(this).find("input[name='score']").addClass("border-rose-500 bg-rose-50");
+                return;
+            }
+
+            let remarkVal = $(this).find("input[name='remarks']").val() || (test === 0 ? "Absent" : "Evaluated");
+
+            data.push({
+                student_id: student_id,
+                subject_id: subject_id,
+                test: test,
+                remarks: remarkVal,
+                term: term,
+                exam_type: exam_type,
+                course: course,
+                session: session
+            });
+        });
+
+        if (hasInvalid) {
+            alert("Some scores are invalid or exceed the maximum allowed mark (" + cachedMaxMarks + "). Please correct them.");
+            return;
+        }
+
+        if (data.length === 0) {
+            alert("No student scores have been entered yet.");
+            return;
+        }
+
+        let saveBtn = $("#save_results");
+        saveBtn.prop("disabled", true).html(`
+            <span class="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+            <span>Saving ${data.length} Results...</span>
+        `);
+
+        $.ajax({
+            url: "{% url 'save_student_results' %}",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            success: function (res) {
+                if (res.status === "success") {
+                    alert("✓ " + (res.message || "Results saved successfully!"));
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert("Notice: " + (res.message || "No changes recorded."));
+                    saveBtn.prop("disabled", false).html(`
+                        <span class="material-symbols-outlined text-lg">save</span>
+                        <span>Save All Results</span>
+                    `);
+                }
+            },
+            error: function (xhr) {
+                let msg = "Could not save results.";
+                try {
+                    let parsed = JSON.parse(xhr.responseText);
+                    msg = parsed.message || msg;
+                } catch (e) {
+                    msg = xhr.statusText || msg;
+                }
+                alert("Error: " + msg);
+                saveBtn.prop("disabled", false).html(`
+                    <span class="material-symbols-outlined text-lg">save</span>
+                    <span>Save All Results</span>
+                `);
+            }
+        });
+    });
+
+});
+</script>
+{% endblock custom_js %}

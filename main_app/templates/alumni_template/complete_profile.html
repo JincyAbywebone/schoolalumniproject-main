@@ -1,0 +1,254 @@
+{% extends 'main_app/base.html' %}
+{% block content %}
+<div class="container">
+    <h2>Complete Your Alumni Profile</h2>
+    <form id="complete-profile-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <p>Logged in as: <strong>{{ request.user.email }}</strong></p>
+        {% comment %} <div style="margin: 12px 0;">
+            <label><input type="checkbox" id="change_email_checkbox" name="change_email" value="1"> Change email</label>
+        </div> {% endcomment %}
+        <div id="form-fields">
+            {% for field in form %}
+            {% if field.name == 'start_year' or field.name == 'end_year' or field.name == 'email' %}
+            {# already rendered with the 'period_of_study' group or skipped (email) #}
+            {% else %}
+            <div class="form-group">
+                {{field.errors}}
+                {{field.label_tag}}
+                {% if field.name == 'mode_of_payment' %}
+                <small class="form-text text-danger"
+                    style="display:block; margin-top:4px; margin-bottom:6px; font-size:0.95rem;">
+                    Details of membership fee paid (Rs 100/-)<br>
+                    If cash – receipt no; If Cheque – Cheque no; If online – UPI transaction ID/ Date/ Time<br>
+                    To pay:<br>
+                    UPI ID: alumnistxvkm@sbi<br>
+                    Account No: 43289388016<br>
+                    Bank and Branch: SBI Ullala IFSC: SBIN0008682
+                </small>
+                {% endif %}
+
+                {% if field.name == 'period_of_study' %}
+                {# Render hidden model field and two selects for start/end years inline #}
+                {{ field }} {# hidden input #}
+                <div class="form-row">
+                    <div class="col-md-6">
+                        {{ form.start_year.label_tag }}
+                        {{ form.start_year }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.end_year.label_tag }}
+                        {{ form.end_year }}
+                    </div>
+                </div>
+                <div id="period_select_error" class="text-danger small mt-1" style="display:none"></div>
+                {% else %}
+                {{field}}
+                {% endif %}
+
+                {% if field.help_text and field.name != 'mode_of_payment' %}
+                <small class="form-text text-muted">{{ field.help_text|linebreaksbr }}</small>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <script>
+            // Toggle email field visibility on 'Change email' checkbox
+            {% comment %} (function () {
+                const checkbox = document.getElementById('change_email_checkbox');
+                const emailEl = document.querySelector('[name="email"]');
+                function toggleEmail() {
+                    if (!emailEl) return;
+                    if (checkbox.checked) {
+                        // show email field if it is hidden
+                        emailEl.type = 'email';
+                    } else {
+                        // hide email field - still stays in DOM as hidden field
+                        emailEl.type = 'hidden';
+                    }
+                }
+                checkbox.addEventListener('change', toggleEmail);
+                toggleEmail();
+            }()); {% endcomment %}
+        </script>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block custom_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let checkbox = document.getElementById("id_same_as_permanent");
+        let permLocality = document.getElementById("id_street_address");
+        let permCity = document.getElementById("id_city");
+        let permDistrict = document.getElementById("id_district_name");
+        let permState = document.getElementById("id_state");
+        let currLocality = document.getElementById("id_current_street_address");
+        let currCity = document.getElementById("id_current_city");
+        let currDistrict = document.getElementById("id_current_district_name");
+        let currState = document.getElementById("id_current_state");
+
+        if (checkbox) {
+            function toggleCurrentAddress() {
+                if (checkbox.checked) {
+                    currLocality.value = permLocality.value;
+                    currDistrict.value = permDistrict.value;
+                    currState.value = permState.value;
+                    currCity.value = permCity.value;
+                    currLocality.readOnly = true;
+                    currDistrict.readOnly = true;
+                    currState.readOnly = true;
+                    currCity.readOnly = true;
+                } else {
+                    currLocality.value = "";
+                    currDistrict.value = "";
+                    currState.value = "";
+                    currCity.value = "";
+                    currLocality.readOnly = false;
+                    currDistrict.readOnly = false;
+                    currState.readOnly = false;
+                    currCity.readOnly = false;
+                }
+            }
+
+            checkbox.addEventListener("change", toggleCurrentAddress);
+        }
+    });
+</script>
+
+<script>
+    // Replace period-of-study mask with two selects (`start_year`, `end_year`) and client-side validation
+    $(document).ready(function () {
+        (function () {
+            var startSel = document.getElementById('id_start_year');
+            var endSel = document.getElementById('id_end_year');
+            var hidden = document.getElementById('id_period_of_study');
+            if (!startSel || !endSel || !hidden) return;
+
+            function showYearError(msg) {
+                var err = document.getElementById('period_select_error');
+                if (!err) {
+                    // fallback: create one after end select
+                    err = document.createElement('div');
+                    err.id = 'period_select_error';
+                    err.className = 'text-danger small mt-1';
+                    endSel.parentNode.insertBefore(err, endSel.nextSibling);
+                }
+                err.innerHTML = msg;
+                err.style.display = 'block';
+            }
+            function hideYearError() {
+                var err = document.getElementById('period_select_error');
+                if (err) err.style.display = 'none';
+            }
+
+            function filterEndOptions() {
+                var s = startSel.value;
+                if (!s) {
+                    // enable all options
+                    for (var i = 0; i < endSel.options.length; i++) {
+                        endSel.options[i].disabled = false;
+                    }
+                    return;
+                }
+                var si = parseInt(s, 10);
+                var chosen = endSel.value;
+                var chosenInt = chosen ? parseInt(chosen, 10) : null;
+                var firstValidIndex = null;
+                for (var i = 0; i < endSel.options.length; i++) {
+                    var opt = endSel.options[i];
+                    if (!opt.value) continue; // skip placeholder
+                    var val = parseInt(opt.value, 10);
+                    if (val < si) {
+                        opt.disabled = true;
+                    } else {
+                        opt.disabled = false;
+                        if (firstValidIndex === null) firstValidIndex = i;
+                    }
+                }
+                // If currently chosen end is less than start, auto-select lowest valid end year (start)`
+                if (chosenInt !== null && chosenInt < si) {
+                    if (firstValidIndex !== null) { endSel.selectedIndex = firstValidIndex; }
+                }
+            }
+
+            function validateAndSetHidden() {
+                var s = startSel.value;
+                var e = endSel.value;
+                var current = new Date().getFullYear();
+                // If both empty clear value
+                if (!s && !e) { hidden.value = ''; hideYearError(); startSel.classList.remove('is-invalid'); endSel.classList.remove('is-invalid'); return true; }
+                if (!s || !e) {
+                    showYearError('Please select both start and end year.');
+                    if (!s) startSel.classList.add('is-invalid'); else startSel.classList.remove('is-invalid');
+                    if (!e) endSel.classList.add('is-invalid'); else endSel.classList.remove('is-invalid');
+                    return false;
+                }
+                var si = parseInt(s, 10), ei = parseInt(e, 10);
+                if (si > current) {
+                    showYearError('Start year cannot be after current year (' + current + ').');
+                    startSel.classList.add('is-invalid');
+                    return false;
+                }
+                if (ei < si) {
+                    showYearError('End year must be the same as or after start year.');
+                    endSel.classList.add('is-invalid');
+                    return false;
+                }
+                hidden.value = si + '-' + ei;
+                hideYearError();
+                startSel.classList.remove('is-invalid');
+                endSel.classList.remove('is-invalid');
+                return true;
+            }
+
+            startSel.addEventListener('change', function () {
+                filterEndOptions();
+                validateAndSetHidden();
+                // If end year still empty, show message immediately to prompt user
+                if (!endSel.value) {
+                    showYearError('Please select end year.');
+                    endSel.classList.add('is-invalid');
+                }
+            });
+
+            endSel.addEventListener('change', function () {
+                validateAndSetHidden();
+                // If start year empty, prompt user immediately
+                if (!startSel.value) {
+                    showYearError('Please select start year.');
+                    startSel.classList.add('is-invalid');
+                }
+            });
+
+            // Also show validation while user focuses the next field
+            endSel.addEventListener('focus', function () {
+                if (!startSel.value) {
+                    showYearError('Please select start year first.');
+                    startSel.classList.add('is-invalid');
+                }
+            });
+            startSel.addEventListener('focus', function () {
+                if (!endSel.value) {
+                    // don't force an error on focus, but clear previous end error when user goes back
+                    endSel.classList.remove('is-invalid');
+                }
+            });
+
+            // initialize state
+            filterEndOptions();
+            validateAndSetHidden();
+
+            // Also validate on form submit
+            var theForm = startSel.closest('form');
+            if (theForm) {
+                theForm.addEventListener('submit', function (e) {
+                    if (!validateAndSetHidden()) { e.preventDefault(); startSel.focus(); }
+                });
+            }
+        })();
+    });
+</script>
+{% endblock custom_js %}

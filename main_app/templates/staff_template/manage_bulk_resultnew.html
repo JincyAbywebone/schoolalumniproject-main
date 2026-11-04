@@ -1,0 +1,429 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block breadcrumb %}Staff &bull; Exams &bull; Manage Results{% endblock breadcrumb %}
+{% block page_heading %}Manage Examination Results{% endblock page_heading %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Top Action & Navigation Tabs -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1 border-b border-slate-200">
+    <div class="flex items-center gap-2">
+      <a href="{% url 'staff_manage_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-sm shadow-indigo-600/20">
+        <span class="material-symbols-outlined text-base">manage_search</span>
+        <span>Manage Results</span>
+      </a>
+      <a href="{% url 'staff_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
+        <span class="material-symbols-outlined text-base text-slate-400">upload_file</span>
+        <span>Bulk Upload</span>
+      </a>
+      <a href="{% url 'staff_add_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">
+        <span class="material-symbols-outlined text-base text-slate-400">person_add</span>
+        <span>Single Student Entry</span>
+      </a>
+    </div>
+
+    <div>
+      <a href="{% url 'staff_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all">
+        <span class="material-symbols-outlined text-base">add_circle</span>
+        <span>Upload New Marks</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Messages Alert -->
+  {% if messages %}
+    <div class="space-y-2">
+      {% for message in messages %}
+        <div class="p-4 rounded-xl text-sm font-medium flex items-center gap-3 {% if message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-200{% elif message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-sky-50 text-sky-700 border border-sky-200{% endif %}">
+          <span class="material-symbols-outlined text-xl">
+            {% if message.tags == 'error' %}error{% elif message.tags == 'success' %}check_circle{% else %}info{% endif %}
+          </span>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Filter & Class Selection Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">filter_list</span>
+        </div>
+        <div>
+          <h3 class="card-title">Filter Recorded Marks</h3>
+          <p class="text-xs text-slate-500 font-normal mt-0.5">Select class criteria to view, edit or clear saved student results</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form id="manage_filter_form" class="space-y-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <!-- Course / Class -->
+          <div class="form-group mb-0">
+            <label for="course" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-indigo-500">school</span>
+              Class / Course &amp; Division <span class="text-rose-500">*</span>
+            </label>
+            <select name="course" class="form-control" id="course" required>
+              <option value="">-- Choose Class --</option>
+              {% for course in courses %}
+                <option value="{{ course.id }}">{{ course.name }} - {{ course.division }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Subject -->
+          <div class="form-group mb-0" id="subject_data_value">
+            <label for="subject_data_value1" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-sky-500">menu_book</span>
+              Subject <span class="text-rose-500">*</span>
+            </label>
+            <select name="subject_data_value" class="form-control" id="subject_data_value1" required>
+              <option value="">-- Select Course First --</option>
+              {% for subject in subjects %}
+                <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.staff }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Exam -->
+          <div class="form-group mb-0">
+            <label for="exam_name" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-amber-500">assignment</span>
+              Examination <span class="text-rose-500">*</span>
+            </label>
+            <select class="form-control" id="exam_name" name="exam_name" required>
+              <option value="">-- Select Exam --</option>
+              {% for examname in examnames %}
+                <option value="{{ examname.id }}">{{ examname.exam_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Term -->
+          <div class="form-group mb-0">
+            <label for="term_select" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-purple-500">calendar_month</span>
+              Academic Term <span class="text-rose-500">*</span>
+            </label>
+            <select class="form-control" id="term_select" name="term_select" required>
+              <option value="">-- Select Term --</option>
+            </select>
+          </div>
+
+          <!-- Session -->
+          <div class="form-group mb-0">
+            <label for="session_select" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <span class="material-symbols-outlined text-sm text-emerald-500">history_edu</span>
+              Academic Session <span class="text-rose-500">*</span>
+            </label>
+            <select class="form-control" id="session_select" name="session_select">
+              {% if sessions %}
+                <option value="{{ sessions.id }}" selected>
+                  {{ sessions.start_year }} - {{ sessions.end_year }}
+                </option>
+              {% else %}
+                <option value="">No Active Session</option>
+              {% endif %}
+            </select>
+          </div>
+
+          <!-- Action Button -->
+          <div class="form-group mb-0 flex items-end">
+            <button type="button" id="bulk_student_details" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 transition-all disabled:opacity-50">
+              <span class="material-symbols-outlined text-lg" id="search_btn_icon">search</span>
+              <span id="search_btn_text">Filter Results</span>
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="loading_spinner" class="hidden">
+    <div class="card p-12 text-center">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 mb-3 animate-spin">
+        <span class="material-symbols-outlined text-2xl">progress_activity</span>
+      </div>
+      <p class="text-sm font-semibold text-slate-700">Searching records...</p>
+      <p class="text-xs text-slate-500 mt-1">Retrieving evaluation entries for the chosen class</p>
+    </div>
+  </div>
+
+  <!-- Results Table Section -->
+  <div id="bulk_data_list">
+    <!-- Populated via AJAX -->
+  </div>
+
+</div>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function () {
+
+    // Helper: badge styling for remarks
+    function getRemarkBadge(remark, score) {
+        let r = (remark || "").toLowerCase().trim();
+        let s = parseFloat(score);
+
+        if (r === "absent" || s === 0) {
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">Absent</span>`;
+        }
+        if (r.includes("outstanding") || r.includes("excellent")) {
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">${remark}</span>`;
+        }
+        if (r.includes("very good") || r.includes("good")) {
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200">${remark}</span>`;
+        }
+        if (r.includes("satisfactory") || r.includes("average")) {
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">${remark}</span>`;
+        }
+        if (r.includes("improvement") || r.includes("below") || r.includes("fail")) {
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">${remark}</span>`;
+        }
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">${remark || "Recorded"}</span>`;
+    }
+
+    // Course selection -> fetch subjects
+    $("#course").change(function () {
+        let course = $(this).val();
+        if (!course) {
+            $("#subject_data_value1").html("<option value=''>-- Select Course First --</option>");
+            return;
+        }
+
+        $("#subject_data_value1").html("<option value=''>Loading subjects...</option>").prop("disabled", true);
+
+        $.ajax({
+            url: "{% url 'get_course_list' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                let subjects = typeof response === 'string' ? JSON.parse(response) : response;
+                let subjectOptions = "<option value=''>-- Select Subject --</option>";
+                if (subjects.length > 0) {
+                    subjects.forEach(subject => {
+                        subjectOptions += `<option value="${subject.id}">${subject.name} (${subject.staff})</option>`;
+                    });
+                } else {
+                    subjectOptions = "<option value=''>No subjects found for this course</option>";
+                }
+                $("#subject_data_value1").html(subjectOptions).prop("disabled", false);
+            },
+            error: function () {
+                $("#subject_data_value1").html("<option value=''>Failed to fetch subjects</option>").prop("disabled", false);
+            }
+        });
+    });
+
+    // Exam name -> Term list
+    $("#exam_name").change(function () {
+        let exam_id = $(this).val();
+        $("#term_select").html("<option value=''>-- Select Term --</option>");
+
+        if (!exam_id) return;
+
+        $.ajax({
+            url: "{% url 'get_term_list' %}",
+            type: 'POST',
+            data: {
+                exam_name: exam_id,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (terms) {
+                let options = "<option value=''>-- Select Term --</option>";
+                if (terms && terms.length > 0) {
+                    terms.forEach(item => {
+                        options += `<option value="${item.name}">${item.name}</option>`;
+                    });
+                } else {
+                    options += `<option value="Term-1">Term-1</option><option value="Term-2">Term-2</option>`;
+                }
+                $("#term_select").html(options);
+            },
+            error: function () {
+                $("#term_select").html(`<option value="">-- Select Term --</option><option value="Term-1">Term-1</option><option value="Term-2">Term-2</option>`);
+            }
+        });
+    });
+
+    // Submit button click -> fetch and display results
+    $("#bulk_student_details").click(function () {
+        let course = $("#course").val();
+        let subject = $("#subject_data_value1").val();
+        let exam = $("#exam_name").val();
+        let term = $("#term_select").val();
+        let session = $("#session_select").val();
+
+        if (!course || !subject || !exam || !term || !session) {
+            alert("Please fill in all filters (Course, Subject, Exam, Term, and Session).");
+            return;
+        }
+
+        let courseText = $("#course option:selected").text();
+        let subjectText = $("#subject_data_value1 option:selected").text();
+        let examText = $("#exam_name option:selected").text();
+
+        $("#loading_spinner").removeClass("hidden");
+        $("#bulk_data_list").html("");
+        $("#bulk_student_details").prop("disabled", true);
+        $("#search_btn_text").text("Filtering...");
+
+        $.ajax({
+            url: "{% url 'staff_bulk_student_data' %}",
+            type: 'POST',
+            data: {
+                course: course,
+                subject: subject,
+                exam: exam,
+                term: term,
+                session: session,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function (response) {
+                $("#loading_spinner").addClass("hidden");
+                $("#bulk_student_details").prop("disabled", false);
+                $("#search_btn_text").text("Filter Results");
+
+                let results = typeof response === "string" ? JSON.parse(response) : response;
+
+                if (!results || results.length < 1) {
+                    let emptyHtml = `
+                        <div class="card p-10 text-center">
+                            <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
+                                <span class="material-symbols-outlined text-2xl">folder_off</span>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-800">No Results Found</h4>
+                            <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">No student marks have been uploaded yet for the selected course, subject, exam, and term.</p>
+                            <div class="mt-4">
+                                <a href="{% url 'staff_bulk_result_new' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition-all shadow-sm">
+                                    <span class="material-symbols-outlined text-base">upload_file</span>
+                                    <span>Upload Marks Now</span>
+                                </a>
+                            </div>
+                        </div>`;
+                    $("#bulk_data_list").html(emptyHtml);
+                    return;
+                }
+
+                let div_data = `
+                <div class="card">
+                    <!-- Results Card Header -->
+                    <div class="card-header flex-wrap gap-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-emerald-600">verified</span>
+                                <h3 class="card-title">Recorded Examination Marks</h3>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
+                                <span class="font-semibold text-slate-700">${courseText}</span>
+                                <span>&bull;</span>
+                                <span>${subjectText}</span>
+                                <span>&bull;</span>
+                                <span class="font-medium text-indigo-600">${examText} (${term})</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                ${results.length} Students Evaluated
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Results Table -->
+                    <div class="card-body p-0 overflow-x-auto">
+                        <table id="example2" class="table table-bordered table-hover w-full mb-0 text-sm">
+                            <thead class="bg-slate-50 text-slate-700">
+                                <tr>
+                                    <th class="w-14 text-center">#</th>
+                                    <th class="w-36">Admission No</th>
+                                    <th>Student Name</th>
+                                    <th class="w-32 text-center">Score</th>
+                                    <th class="w-44 text-center">Remarks</th>
+                                    <th class="w-44 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">`;
+
+                results.forEach(function (student, index) {
+                    let initials = student.student_name ? student.student_name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase() : "ST";
+                    let scoreBadge = student.test == 0 
+                        ? `<span class="font-mono text-xs font-bold px-2.5 py-1 rounded bg-slate-100 text-slate-500">0.0</span>`
+                        : `<span class="font-mono text-sm font-bold px-2.5 py-1 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">${student.test}</span>`;
+
+                    div_data += `
+                        <tr class="hover:bg-slate-50/70 transition-colors">
+                            <td class="text-center font-mono text-slate-400 text-xs">${index + 1}</td>
+                            <td>
+                                <span class="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                                    ${student.admission_number || "N/A"}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center">
+                                        ${initials}
+                                    </div>
+                                    <span class="font-semibold text-slate-800">${student.student_name}</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                ${scoreBadge}
+                            </td>
+                            <td class="text-center">
+                                ${getRemarkBadge(student.remarks, student.test)}
+                            </td>
+                            <td class="text-center">
+                                <div class="inline-flex items-center gap-1.5">
+                                    <a href="/staff_result/staff_edit_bulkresult/${student.student_id}" 
+                                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                                       title="Edit Score">
+                                        <span class="material-symbols-outlined text-sm">edit</span>
+                                        <span>Edit</span>
+                                    </a>
+                                    <a href="/staff_result/delete_bulkresult/${student.student_id}" 
+                                       onclick="return confirm('Are you sure you want to clear the marks for ${student.student_name}?');" 
+                                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors"
+                                       title="Clear Score">
+                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                        <span>Clear</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+
+                div_data += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+
+                $("#bulk_data_list").html(div_data);
+            },
+            error: function (xhr) {
+                $("#loading_spinner").addClass("hidden");
+                $("#bulk_student_details").prop("disabled", false);
+                $("#search_btn_text").text("Filter Results");
+                alert("Error fetching bulk results: " + (xhr.responseText || xhr.statusText));
+            }
+        });
+    });
+
+});
+</script>
+{% endblock custom_js %}

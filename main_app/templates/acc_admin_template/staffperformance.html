@@ -1,0 +1,153 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+{% block content %}
+
+<div class="container mt-4">
+  <form method="GET" class="mb-4"> 
+    <div class="row">
+      <div class="col-md-4">
+        <select name="course" id="course" class="form-control">
+          <option value="">Select Course</option>
+          {% for courses in course %}
+          <option value="{{ courses.id }}">{{ courses }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+  <div class="col-md-4">
+  
+    <select class="form-control" id="session_select" name="session_select">
+        {% if session %}
+            <option value="{{ session.id }}" selected>
+                {{ session.start_year }} - {{ session.end_year }}
+            </option>
+        {% else %}
+            <option value="">No Active Session</option>
+        {% endif %}
+    </select>
+</div>
+
+      <div class="col-md-2 mt-3">
+        <button type="button" id="student_graphdata" class="btn btn-primary w-100">View Graph</button>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-md-12" id="graphContainer">
+        <canvas id="marksGraph" width="900" height="400"></canvas>
+        
+      </div>
+
+    </div>
+    <div class="mt-4 text-center">
+  <button type="button" class="btn btn-secondary" onclick="printGraph()">Print Graph</button>
+</div>
+           <div class="mt-4">
+  <h5>Performance Legend</h5>
+   <div class="row">
+ 
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#146b0cff;"></span> Distinction (≥ 75%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#28e141ff;"></span> First Class (≥ 60%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#ffc107;"></span> Second Class (≥ 50%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#e3d10cff;"></span> Pass / Average (≥ 35%)</div>
+    <div class="col-auto"><span style="display:inline-block; width:20px; height:20px; background:#f6061eff;"></span> Fail (< 35%)</div>
+  </div>
+  
+  </form> 
+</div>
+
+{% endblock content %}
+
+{% block custom_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function () {
+  $('#student_graphdata').click(function (e) {
+    e.preventDefault(); 
+
+    loadGraph();        
+  });
+});
+
+
+let myCharts = [];
+
+function loadGraph() {
+  const courseId = document.getElementById('course').value;
+  const sessionId = document.getElementById('session_select').value;
+  if (!courseId || !sessionId) { alert("Please select a class and session."); return; }
+
+  if (myCharts.length) {
+    myCharts.forEach(chart => chart.destroy());
+    myCharts = [];
+  }
+
+  fetch(`/acc_admin/get_course_performance_graph/?course_id=${courseId}&session_id=${sessionId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) { alert(data.error); return; }
+
+      const container = document.getElementById('graphContainer');
+      container.innerHTML = '';
+      const canvas = document.createElement('canvas');
+      container.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+
+      const chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.labels,
+          datasets: data.datasets
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: { display: true, text: data.title },
+            legend: { position: 'bottom' }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              title: { display: true, text: 'Average Marks (%)' }
+            },
+            x: {
+              title: { display: true, text: 'Exam' }
+            }
+          }
+        }
+      });
+
+      myCharts.push(chartInstance);
+    })
+    .catch(err => {
+      console.error("Error:", err);
+      alert("Failed to load staff performance graph.");
+    });
+}
+function printGraph() {
+  const canvasList = document.querySelectorAll("#graphContainer canvas");
+  const printWindow = window.open('', '', 'height=600,width=900');
+
+  printWindow.document.write('<html><head><title>Print Graph</title></head><body>');
+  
+  canvasList.forEach((canvas, index) => {
+    const imgData = canvas.toDataURL("image/png"); // canvas → image
+    printWindow.document.write(`<div style="margin-bottom:30px;"><img src="${imgData}" style="width:100%; max-width:900px;"/></div>`);
+  });
+
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 500);
+}
+</script>
+{% endblock custom_js %}
+
+

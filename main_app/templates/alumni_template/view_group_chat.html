@@ -1,0 +1,192 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600&display=swap');
+
+    .chat-container {
+        max-width: 800px;
+        margin: auto;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        height: 500px;
+        background: #fdfdfd;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .chat-header {
+        padding: 15px;
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .chat-bubble {
+        max-width: 70%;
+        padding: 8px 12px;
+        border-radius: 12px;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        font-size: 15px;
+        line-height: 1.4;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    
+    .sent {
+        align-self: flex-end;
+        background-color: #dcf8c6;
+        border: 1px solid #b2e59e;
+    }
+    
+    .received {
+        align-self: flex-start;
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+    }
+    
+    .sender-name {
+        font-family: 'Nunito', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: #075e54;
+        margin-bottom: 3px;
+        text-align: left;
+    }
+    
+    .chat-message {
+        font-size: 15px;
+        color: #333;
+    }
+        
+    .timestamp {
+        font-size: 11px;
+        color: #999;
+        margin-top: 4px;
+        text-align: right;
+    }
+    
+    .chat-form {
+        padding: 12px;
+        border-top: 1px solid #ccc;
+        background-color: #f8f8f8;
+    }
+
+    .chat-actions {
+        margin-top: 5px;
+        text-align: right;
+    }
+
+    .chat-actions a {
+        font-size: 0.8rem;
+        margin-left: 5px;
+        text-decoration: none;
+    }
+
+    .mention-highlight {
+        color: blue !important;
+        font-weight: bold;
+    }
+
+    select.form-control {
+        max-width: 300px;
+        display: inline-block;
+        margin-left: 10px;
+    }
+</style>
+
+<div class="chat-container">
+    <div class="chat-header">
+        Group Chat: {{ group.course.name }} - {{ group.period_of_study }}
+    </div>
+
+    <!-- Mention Dropdown -->
+    <div class="px-3 pt-2">
+        <label><strong>Mention the member:</strong></label>
+        <select id="mentionSelect" class="form-control" onchange="mentionUser(this.value)">
+            <option value="">-- Select a member --</option>
+            {% for member in group_members %}
+                <option value="@{{ member.user.first_name|capfirst }}">{{ member.user.first_name|capfirst }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="chat-messages" id="chat-box">
+        {% for chat in chat_history %}
+            <div class="chat-bubble {% if chat.sender == request.user %}sent{% else %}received{% endif %}">
+                <span class="sender-name">
+                    {{ chat.sender.first_name|capfirst }}
+                </span>
+                <span class="chat-message">{{ chat.message }}</span>
+                <div class="timestamp">{{ chat.timestamp|date:"d M Y H:i" }}</div>
+
+                {% if chat.sender == request.user %}
+                    <div class="chat-actions">
+                        <a href="{% url 'edit_group_message' chat.id %}" class="text-warning">✏ Edit</a>
+                        <a href="{% url 'delete_group_message' chat.id %}" class="text-danger"
+                           onclick="return confirm('Are you sure you want to delete this message?');">🗑 Delete</a>
+                    </div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>No messages yet in this group.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Send Form -->
+    <form method="post" class="chat-form">
+        {% csrf_token %}
+        <div class="input-group">
+            <textarea name="message" class="form-control" rows="1" placeholder="Type a message..." required></textarea>
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Send</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Home -->
+<div class="text-center mt-3">
+    <a href="{% url 'alumnis_home' %}" style="background-color: #007bff;" class="btn btn-secondary">Home</a>
+</div>
+
+<script>
+    // Scroll to bottom on page load
+    document.addEventListener("DOMContentLoaded", function () {
+        const chatBox = document.getElementById("chat-box");
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Mention user insert
+        window.mentionUser = function(username) {
+            const textarea = document.querySelector('textarea[name="message"]');
+            if (username && !textarea.value.includes(username)) {
+                textarea.value += username + ' ';
+                textarea.focus();
+            }
+        };
+
+        // Highlight @mentions
+        document.querySelectorAll('.chat-message').forEach(function (el) {
+            el.innerHTML = el.textContent.replace(/(@\w+)/g, '<span class="mention-highlight">$1</span>');
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Gender</th>
+                                    <th>Avatar</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for allAdmin in alumni_Admin %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{allAdmin.first_name}}, {{allAdmin.last_name}}</td>
+                                    <td>{{allAdmin.email}}</td>
+                                    <td>{{allAdmin.gender}}</td>
+                                    <td>
+                                        {% if allAdmin.profile_pic == ""  %}
+                                        No Image
+                                        {% else %}
+                                        <img class="img img-fluid mb-2" height="100" width="100"
+                                            src="{{allAdmin.profile_pic.url}}" alt="">
+                                        {% endif %}
+                                    </td>
+
+                                     <td>
+                                        {% comment %} <a href="{% url 'edit_alumniAdmin' allAdmin.id %}" class="btn btn-primary">Edit</a>  {% endcomment %}
+                                       <a href="{% url 'delete_allAdmin' allAdmin.id %}" class="btn btn-danger" onclick="return confirm('Are you sure about this ?')">Delete</a>   
+                                        
+                                    </td>  
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

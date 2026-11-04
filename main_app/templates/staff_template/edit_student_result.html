@@ -1,0 +1,140 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                    <form method="POST">
+                        {% csrf_token %}
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div>
+
+       
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <div class="card-body">
+            
+
+                 {% comment %} {{ form }} {% endcomment %}
+
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                        <button type="submit" id='update_result' class="btn btn-primary btn-block">Update Results</button>
+               
+                    </div>
+                </form>
+                </div>
+                <!-- /.card -->
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+
+{% block custom_js %}
+<script>
+     $(document).ready(function () {
+        $("#id_subject").change(function () {
+            fetchStudents();
+            });
+            $("#id_session_year").change(function () {
+               
+                fetchStudents();
+                });
+   $("#id_student").change(function () {
+    fetch_student_result();
+                });
+                $("#id_exam").hide()
+                $("#id_test").hide()
+                $("#id_remarks").hide()
+                $("#id_term").hide()
+                $("#update_result").hide()
+                
+                $('label[for="id_test"]').hide();
+                $('label[for="id_exam"]').hide();
+                $('label[for="id_remarks"]').hide();
+                $('label[for="id_term"]').hide();
+        function fetchStudents(){
+            var subject = $("#id_subject").val()
+            var session = $("#id_session_year").val()
+            $("#id_student").html(null)
+            if (session.length  == 0 || subject.length == 0 || session < 1 || subject < 1){
+                return false;
+            }
+            $.ajax({
+                url: "{% url 'get_students' %}",
+                type: 'POST',
+                data: {
+                    subject: subject,
+                    session:session
+                }
+            }).done(function (response) {
+                var json_data = JSON.parse(response)
+                if (json_data.length < 1) {
+                    alert("No data to display")
+                } else {
+                    var div_data = "<option>Select Student</option>"
+
+                    for (key in json_data) {
+                        div_data += "<option value='" + json_data[key]['id'] + "'>" + json_data[key]['name'] + " </option>"
+                    }
+             
+                    $("#id_student").html(div_data)
+                }
+            }).fail(function (response) {
+                alert("Error in fetching students")
+            })
+               }
+
+              function fetch_student_result() {
+    var student = $("#id_student").val();
+    var subject = $("#id_subject").val();
+    
+    // Reset form fields
+    $("#id_test, #id_exam, #id_remarks, #id_term").val(null).hide();
+    $("#update_result").hide();
+    $('label[for="id_test"], label[for="id_exam"], label[for="id_remarks"], label[for="id_term"]').hide();
+    
+    if (student.length == 0 || subject.length == 0 || student < 1 || subject < 1) {
+        return false;
+    }
+    
+    $.ajax({
+        url: "{% url 'fetch_student_result' %}",
+        type: 'POST',
+        data: {
+            subject: subject,
+            student: student
+        }
+    }).done(function (response) {
+        if (response.length === 0) {
+            alert("No data to display");
+        } else {
+            // Assuming the response is already a JSON object, no need to parse
+            var result = response[0];  // Get the first result
+            
+            $("#id_exam").val(result.exam);
+            $("#id_test").val(result.test);
+            $("#id_remarks").val(result.remarks);
+            $("#id_term").val(result.term);
+            $("#id_exam, #id_test, #id_remarks, #id_term, #update_result").show();
+            $('label[for="id_test"], label[for="id_exam"], label[for="id_remarks"], label[for="id_term"]').show();
+        }
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+        alert("Error in fetching results: " + errorThrown);
+    });
+}
+
+    }); 
+</script>
+{% endblock custom_js %}
