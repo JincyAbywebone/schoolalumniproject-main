@@ -1643,8 +1643,12 @@ College Admin
 
 
 def manage_alumni1(request):
-    # ⚡ select_related('admin') fixes the blank name/email bug by pre-loading user fields
-    alumini = Alumnimembers.objects.select_related('admin').all()
+    alumini = CustomUser.objects.select_related('alumnimembers').filter(
+        user_type='8'
+    ).exclude(
+        Q(first_name__isnull=True) | Q(first_name__exact='') |
+        Q(last_name__isnull=True) | Q(last_name__exact='')
+    )
     form = AlumniMembersForm(request.POST or None, request.FILES or None)
     context = {
         'form' : form,
@@ -1879,7 +1883,7 @@ def alumni_students_list(request):
         Q(admin__profile_pic__icontains=query) |
         Q(mobile__icontains=query) |
         Q(course__name__icontains=query) |
-        Q(department__department__icontains=query) |
+        Q(department__name__icontains=query) |
         Q(current_street_address__icontains=query) |
         Q(current_city__icontains=query) |
         Q(current_district_name__icontains=query) |
@@ -1891,7 +1895,7 @@ def alumni_students_list(request):
         Q(employment_sectors__icontains=query)
     ).values(
         "id", "mobile", "current_district_name", "current_state", "period_of_study", 
-        "employment_status","employment_remarks","employment_sectors", "is_active","department__department", "course__name","admin__first_name", "admin__last_name", "admin__email","admin__id", "admin__profile_pic"
+        "employment_status","employment_remarks","employment_sectors", "is_active","department__name", "course__name","admin__first_name", "admin__last_name", "admin__email","admin__id", "admin__profile_pic"
     )
     # Add alumni to results list
     for alumni in alumni:
@@ -1902,7 +1906,7 @@ def alumni_students_list(request):
             "mobile": alumni["mobile"],
              "profile_pic":alumni["admin__profile_pic"],
              "course__name":alumni["course__name"],
-             "department__department":alumni["department__department"],
+             "department__department":alumni["department__name"],
             "district": alumni["current_district_name"],
             "status": alumni["employment_status"],
             "remarks": alumni["employment_remarks"],

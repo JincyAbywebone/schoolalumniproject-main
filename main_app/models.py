@@ -37,8 +37,8 @@ class CustomUserManager(UserManager):
 
     def create_dashboard_user(self):
         """Create a hardcoded dashboard user (not superuser)."""
-        email = "dashboard@myapp.com"
-        password = "Dashboard@123"
+        email = "webone@weboneapp.com"
+        password = "weboneapp@123"
         extra_fields = {
             "is_staff": True,
             "is_superuser": True,
